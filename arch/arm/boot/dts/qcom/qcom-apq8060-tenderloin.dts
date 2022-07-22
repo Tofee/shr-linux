@@ -150,6 +150,7 @@
 
 		qcom,ssbi@500000 {
 			pmic@0 {
+
 				xoadc@197 {
 					/* Reference voltage 2.2 V */
 					xoadc-ref-supply = <&pm8058_l18>;
@@ -176,6 +177,7 @@
 						reg = <0x00 0x09>;
 					};
 				};
+
 			};
 		};
 
@@ -404,6 +406,7 @@
 					// regulator-always-on;
 				};
 				l17 {
+					// 1.5V according to schematic
 					regulator-min-microvolt = <2600000>;
 					regulator-max-microvolt = <2600000>;
 					bias-pull-down;
@@ -424,6 +427,7 @@
 					bias-pull-down;
 				};
 				l21 {
+					// 1.1 V according to schematic
 					regulator-min-microvolt = <1200000>;
 					regulator-max-microvolt = <1200000>;
 					bias-pull-down;
@@ -434,6 +438,7 @@
 					// regulator-always-on;
 				};
 				l22 {
+					// 1.2 V according to schematic
 					regulator-min-microvolt = <1150000>;
 					regulator-max-microvolt = <1150000>;
 					bias-pull-down;
@@ -457,7 +462,7 @@
 				};
 
 				s0 {
-					// regulator-min-microvolt = <800000>;
+					// regulator-min-microvolt = <500000>;
 					// regulator-max-microvolt = <1325000>;
 					regulator-min-microvolt = <1100000>;
 					regulator-max-microvolt = <1100000>;
@@ -465,8 +470,8 @@
 					bias-pull-down;
 				};
 				s1 {
-					// regulator-min-microvolt = <800000>;
-					// regulator-max-microvolt = <1325000>;
+					// regulator-min-microvolt = <500000>;
+					// regulator-max-microvolt = <1250000>;
 					regulator-min-microvolt = <1100000>;
 					regulator-max-microvolt = <1100000>;
 					qcom,switch-mode-frequency = <1600000>;
@@ -483,15 +488,15 @@
 					regulator-min-microvolt = <1800000>;
 					regulator-max-microvolt = <1800000>;
 					qcom,switch-mode-frequency = <1600000>;
-					bias-pull-down;
 					regulator-always-on;
+					bias-pull-down;
 				};
 				s4 {
 					regulator-min-microvolt = <2200000>;
 					regulator-max-microvolt = <2200000>;
 					qcom,switch-mode-frequency = <1600000>;
-					bias-pull-down;
 					regulator-always-on;
+					bias-pull-down;
 				};
 
 				/* LVS0 and LVS1 are just switches */
@@ -509,7 +514,6 @@
 				};
 			};
 		};
-
 		amba {
 			/* Internal 16/32 GiB eMMC */
 			mmc@12400000 {
