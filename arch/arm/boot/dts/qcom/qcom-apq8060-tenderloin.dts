@@ -72,240 +72,6 @@
 	};
 
 	soc {
-		pinctrl@800000 {
-			/* eMMC pins, all 8 data lines connected */
-			emmc_pins: sdcc1 {
-				mux {
-					pins = "gpio159", "gpio160", "gpio161",
-					     "gpio162", "gpio163", "gpio164",
-					     "gpio165", "gpio166", "gpio167",
-					     "gpio168";
-					function = "sdc1";
-				};
-				clk {
-					pins = "gpio167"; /* SDC1 CLK */
-					drive-strength = <16>;
-					bias-disable;
-				};
-				cmd {
-					pins = "gpio168"; /* SDC1 CMD */
-					drive-strength = <10>;
-					bias-pull-up;
-				};
-				data {
-					/* SDC1 D0 to D7 */
-					pins = "gpio159", "gpio160", "gpio161", "gpio162",
-					     "gpio163", "gpio164", "gpio165", "gpio166";
-					drive-strength = <10>;
-					bias-pull-up;
-				};
-			};
-
-			sdcc4_pins: sdcc4 {
-				clk {
-					pins = "sdc4_clk";
-					drive-strength = <8>;
-					bias-disable;
-				};
-				cmd {
-					pins = "sdc4_cmd";
-					drive-strength = <8>;
-					bias-pull-up;
-				};
-				data {
-					pins = "sdc4_data";
-					drive-strength = <8>;
-					bias-pull-up;
-				};
-			};
-
-			panel_pins: lcdc {
-				mux {
-					pins =
-					"gpio0",  "gpio1",  "gpio2",  "gpio3",  "gpio4",  "gpio5",  "gpio6",
-					"gpio7",  "gpio8",  "gpio9",  "gpio10", "gpio11", "gpio12", "gpio13",
-					"gpio14", "gpio15", "gpio16", "gpio17", "gpio18", "gpio19", "gpio20",
-					"gpio21", "gpio22", "gpio23", "gpio24", "gpio25", "gpio26", "gpio27";
-					function = "lcdc";
-				};
-			};
-
-			gsbi3_i2c_pins: i2c3 {
-				mux {
-					pins = "gpio43", "gpio44";
-					function = "gsbi3";
-				};
-				pinconf {
-					pins = "gpio43", "gpio44";
-					drive-strength = <16>;
-					bias-disable;
-				};
-			};
-
-			gsbi4_i2c_pins: i2c4 {
-				mux {
-					pins = "gpio47", "gpio48";
-					function = "gsbi4";
-				};
-				pinconf {
-					pins = "gpio47", "gpio48";
-					drive-strength = <16>;
-					bias-disable;
-				};
-			};
-
-			gsbi6_uart_pins: i2c4 {
-				mux {
-					pins = "gpio53", "gpio54", "gpio55", "gpio56";
-					function = "gsbi6";
-				};
-				pinconf {
-					pins = "gpio53", "gpio54", "gpio55", "gpio56";
-					drive-strength = <16>;
-					bias-disable;
-				};
-			};
-
-			gsbi7_i2c_pins: i2c7 {
-				mux {
-					pins = "gpio59", "gpio60";
-					function = "gsbi7";
-				};
-				pinconf {
-					pins = "gpio59", "gpio60";
-					drive-strength = <16>;
-					bias-disable;
-				};
-			};
-			gsbi8_i2c_pins: gsbi8_i2c {
-				mux {
-					pins = "gpio64", "gpio65";
-					function = "gsbi8";
-				};
-				pinconf {
-					pins = "gpio64", "gpio65";
-					drive-strength = <16>;
-					/* These have external pull-up 2.2kOhm to 1.8V */
-					bias-disable;
-				};
-			};
-
-			gsbi10_i2c_pins: i2c10 {
-				mux {
-					pins = "gpio72", "gpio73";
-					function = "gsbi10";
-				};
-				pinconf {
-					pins = "gpio72", "gpio73";
-					drive-strength = <16>;
-					bias-disable;
-				};
-			};
-
-			mpu3050_gpios: mpu {
-				irq {
-					pins = "gpio125";
-					function = "gpio";
-					drive-strength = <2>;
-					bias-disable;
-				};
-			};
-
-			/* Headphone UART pins */
-			headphone_uart_pins: gsbi12_serial {
-				mux {
-					pins = "gpio117", "gpio118";
-					function = "gsbi12";
-				};
-				rx {
-					pins = "gpio117";
-					drive-strength = <2>;
-					bias-pull-up;
-				};
-				tx {
-					pins = "gpio118";
-					drive-strength = <8>;
-					bias-disable;
-				};
-				/* Connect headphone jack to UART rather than audio */
-				enable {
-					pins = "gpio58";
-					function = "gpio";
-					output-high;
-				};
-			};
-
-			charger_gpios: max8903b {
-				mux {
-					pins = "gpio30", "gpio33", "gpio34", "gpio35", "gpio36", "gpio41", "gpio42", "gpio133", "gpio140";
-					function = "gpio";
-				};
-				in {
-					pins = "gpio35", "gpio36", "gpio140";
-					drive-strength = <2>;
-					input-enable;
-					bias-pull-up;
-				};
-				out {
-					pins = "gpio30", "gpio33", "gpio34", "gpio41", "gpio42", "gpio133";
-					drive-strength = <2>;
-				};
-				/* Safe initial state, charging disabled */
-				dcm {
-					pins = "gpio42";
-					output-high;
-				};
-				/* 500 mA USB charging. Not controlled by driver. */
-				iusb {
-					pins = "gpio133";
-					output-high;
-				};
-				usus {
-					pins = "gpio33";
-					output-low;
-				};
-				cen {
-					pins = "gpio41";
-					output-low;
-				};
-				/*
-				 * Limit DC charging current to 750 mA, the
-				 * minimum value. Appears to control a
-				 * multiplexed set of resistors connected to
-				 * the IDC pin. This functionality is not
-				 * supported by the MAX8903 driver.
-				 */
-				d_iset {
-					pins = "gpio34", "gpio30";
-					output-low;
-				};
-			};
-			wlan_gpios: wlan {
-				irq {
-					pins = "gpio93", "gpio135", "gpio137";
-					function = "gpio";
-					drive-strength = <2>;
-					bias-disable;
-				};
-			};
-
-			touch_pins: touch {
-				irq {
-					pins = "gpio123";
-					function = "gpio";
-					drive-strength = <2>;
-					bias-disable;
-				};
-
-				reset {
-					pins = "gpio70";
-					function = "gpio";
-					drive-strength = <16>;
-					bias-disable;
-				};
-			};
-		};
-
 		gsbi@19800000 {
 			status = "okay";
 			qcom,mode = <GSBI_PROT_I2C>;
@@ -654,6 +420,7 @@
 				vqmmc-supply = <&pm8901_lvs0>;
 			};
 		};
+		
 		usb@12500000 {
 			status = "okay";
 			dr_mode = "otg";
@@ -731,6 +498,210 @@
 		 * enable high current charging.
 		 */
 		uok-gpios = <&tlmm 140 GPIO_ACTIVE_LOW>;
+	};
+};
+
+&tlmm {
+	/* eMMC pins, all 8 data lines connected */
+	emmc_pins: sdcc1-state {
+		clk-pins {
+			pins = "gpio167"; /* SDC1 CLK */
+			function = "sdc1";
+			drive-strength = <16>;
+			bias-disable;
+		};
+		cmd-pins {
+			pins = "gpio168"; /* SDC1 CMD */
+			function = "sdc1";
+			drive-strength = <10>;
+			bias-pull-up;
+		};
+		data-pins {
+			/* SDC1 D0 to D7 */
+			pins = "gpio159", "gpio160", "gpio161", "gpio162",
+				 "gpio163", "gpio164", "gpio165", "gpio166";
+			function = "sdc1";
+			drive-strength = <10>;
+			bias-pull-up;
+		};
+	};
+
+	sdcc4_pins: sdcc4-state {
+		clk-pins {
+			pins = "sdc4_clk";
+			function = "sdc4";
+			drive-strength = <8>;
+			bias-disable;
+		};
+		cmd-pins {
+			pins = "sdc4_cmd";
+			function = "sdc4";
+			drive-strength = <8>;
+			bias-pull-up;
+		};
+		data-pins {
+			pins = "sdc4_data";
+			function = "sdc4";
+			drive-strength = <8>;
+			bias-pull-up;
+		};
+	};
+
+	panel_pins: lcdc-state {
+		mux-pins {
+			pins =
+			"gpio0",  "gpio1",  "gpio2",  "gpio3",  "gpio4",  "gpio5",  "gpio6",
+			"gpio7",  "gpio8",  "gpio9",  "gpio10", "gpio11", "gpio12", "gpio13",
+			"gpio14", "gpio15", "gpio16", "gpio17", "gpio18", "gpio19", "gpio20",
+			"gpio21", "gpio22", "gpio23", "gpio24", "gpio25", "gpio26", "gpio27";
+			function = "lcdc";
+		};
+	};
+
+	gsbi3_i2c_pins: i2c3-state {
+		pins = "gpio43", "gpio44";
+		function = "gsbi3";
+		drive-strength = <16>;
+		bias-disable;
+	};
+
+	gsbi4_i2c_pins: i2c4-state {
+		pins = "gpio47", "gpio48";
+		function = "gsbi4";
+		drive-strength = <16>;
+		bias-disable;
+	};
+
+	gsbi6_uart_pins: i2c4-state {
+		pins = "gpio53", "gpio54", "gpio55", "gpio56";
+		function = "gsbi6";
+		drive-strength = <16>;
+		bias-disable;
+	};
+
+	gsbi7_i2c_pins: i2c7-state {
+		pins = "gpio59", "gpio60";
+		function = "gsbi7";
+		drive-strength = <16>;
+		bias-disable;
+	};
+	gsbi8_i2c_pins: gsbi8_i2c-state {
+		pins = "gpio64", "gpio65";
+		function = "gsbi8";
+		drive-strength = <16>;
+		/* These have external pull-up 2.2kOhm to 1.8V */
+		bias-disable;
+	};
+
+	gsbi10_i2c_pins: i2c10-state {
+		pins = "gpio72", "gpio73";
+		function = "gsbi10";
+		drive-strength = <16>;
+		bias-disable;
+	};
+
+	mpu3050_gpios: mpu-state {
+		irq-pins {
+			pins = "gpio125";
+			function = "gpio";
+			drive-strength = <2>;
+			bias-disable;
+		};
+	};
+
+	/* Headphone UART pins */
+	headphone_uart_pins: gsbi12-serial-state {
+		rx-pins {
+			pins = "gpio117";
+			function = "gsbi12";
+			drive-strength = <2>;
+			bias-pull-up;
+		};
+		tx-pins {
+			pins = "gpio118";
+			function = "gsbi12";
+			drive-strength = <8>;
+			bias-disable;
+		};
+		/* Connect headphone jack to UART rather than audio */
+		enable-pins {
+			pins = "gpio58";
+			function = "gpio";
+			output-high;
+		};
+	};
+
+	charger_gpios: max8903b-state {
+		in-pins {
+			pins = "gpio35", "gpio36", "gpio140";
+			function = "gpio";
+			drive-strength = <2>;
+			input-enable;
+			bias-pull-up;
+		};
+		out-pins {
+			pins = "gpio30", "gpio33", "gpio34", "gpio41", "gpio42", "gpio133";
+			function = "gpio";
+			drive-strength = <2>;
+		};
+		/* Safe initial state, charging disabled */
+		dcm-pins {
+			pins = "gpio42";
+			function = "gpio";
+			output-high;
+		};
+		/* 500 mA USB charging. Not controlled by driver. */
+		iusb-pins {
+			pins = "gpio133";
+			function = "gpio";
+			output-high;
+		};
+		usus-pins {
+			pins = "gpio33";
+			function = "gpio";
+			output-low;
+		};
+		cen-pins {
+			pins = "gpio41";
+			function = "gpio";
+			output-low;
+		};
+		/*
+		 * Limit DC charging current to 750 mA, the
+		 * minimum value. Appears to control a
+		 * multiplexed set of resistors connected to
+		 * the IDC pin. This functionality is not
+		 * supported by the MAX8903 driver.
+		 */
+		d-iset-pins {
+			pins = "gpio34", "gpio30";
+			function = "gpio";
+			output-low;
+		};
+	};
+	wlan_gpios: wlan-state {
+		irq-pins {
+			pins = "gpio93", "gpio135", "gpio137";
+			function = "gpio";
+			drive-strength = <2>;
+			bias-disable;
+		};
+	};
+
+	touch_pins: touch-state {
+		irq-pins {
+			pins = "gpio123";
+			function = "gpio";
+			drive-strength = <2>;
+			bias-disable;
+		};
+
+		reset-pins {
+			pins = "gpio70";
+			function = "gpio";
+			drive-strength = <16>;
+			bias-disable;
+		};
 	};
 };
 
