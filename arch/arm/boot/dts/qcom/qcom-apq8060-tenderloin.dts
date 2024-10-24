@@ -699,7 +699,6 @@
 	vqmmc-supply = <&pm8901_lvs0>;
 };
 
-#if 0
 &gsbi3 {
 	status = "okay";
 	qcom,mode = <GSBI_PROT_I2C>;
@@ -730,7 +729,6 @@
 
 	// capacitive proximity??
 };
-#endif
 
 &gsbi4 {
 	status = "okay";
