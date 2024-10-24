@@ -407,17 +407,6 @@
 			};
 		};
 
-		amba {
-			/* Internal 16/32 GiB eMMC */
-			mmc@12400000 {
-				status = "okay";
-				pinctrl-names = "default";
-				pinctrl-0 = <&emmc_pins>;
-				vmmc-supply = <&pm8901_l5>;
-				vqmmc-supply = <&pm8901_lvs0>;
-			};
-		};
-		
 		usb@12500000 {
 			status = "okay";
 			dr_mode = "otg";
@@ -700,6 +689,14 @@
 			bias-disable;
 		};
 	};
+};
+
+&sdcc1 {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&emmc_pins>;
+	vmmc-supply = <&pm8901_l5>;
+	vqmmc-supply = <&pm8901_lvs0>;
 };
 
 #if 0
