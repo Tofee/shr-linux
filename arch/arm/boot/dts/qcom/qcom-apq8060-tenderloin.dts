@@ -1,4 +1,7 @@
 // SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
+
+/dts-v1/;
+
 #include <dt-bindings/input/input.h>
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/pinctrl/qcom,pmic-gpio.h>
@@ -318,7 +321,7 @@
 		};
 
 		qcom,ssbi@500000 {
-			pmic@0 {
+			pmic {
 				xoadc@197 {
 					/* Reference voltage 2.2 V */
 					xoadc-ref-supply = <&pm8058_l18>;
