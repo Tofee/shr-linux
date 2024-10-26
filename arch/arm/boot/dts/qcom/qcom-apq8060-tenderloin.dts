@@ -7,6 +7,7 @@
 #include <dt-bindings/pinctrl/qcom,pmic-gpio.h>
 #include <dt-bindings/pinctrl/qcom,pmic-mpp.h>
 #include "qcom-msm8660.dtsi"
+#include "pm8058.dtsi"
 
 / {
 	model = "HP TouchPad";
@@ -14,27 +15,12 @@
 
 	aliases {
 		serial0 = &gsbi12_serial;
-		display0 = &lg_panel;
 	};
 
 	chosen {
 		/* Bootloader passes console=tty1, which overrides stdout-path */
 		bootargs = "console=ttyMSM0,115200 earlycon";
 		stdout-path = "serial0:115200n8";
-
-		#address-cells = <1>;
-		#size-cells = <1>;
-		ranges;
-		fb0: framebuffer@7f600000 {
-			compatible = "simple-framebuffer";
-			status = "okay";
-			reg = <0x7f600000 (1024 * 768 * 4 * 3)>;
-			width = <1024>;
-			height = <768>;
-			stride = <(1024 * 4)>;
-			format = "a8r8g8b8";
-			display = <&lg_panel>;
-		};
 	};
 
 	regulators {
@@ -316,37 +302,6 @@
 					function = "gpio";
 					drive-strength = <16>;
 					bias-disable;
-				};
-			};
-		};
-
-		qcom,ssbi@500000 {
-			pmic {
-				xoadc@197 {
-					/* Reference voltage 2.2 V */
-					xoadc-ref-supply = <&pm8058_l18>;
-
-					/* Board-specific channels */
-					mpp5@5 {
-						/* Connected to AOUT of ALS sensor */
-						reg = <0x00 0x05>;
-					};
-					mpp6@6 {
-						/* Connected to test point TP43 */
-						reg = <0x00 0x06>;
-					};
-					mpp7@7 {
-						/* Connected to battery thermistor */
-						reg = <0x00 0x07>;
-					};
-					mpp8@8 {
-						/* Connected to battery ID detector */
-						reg = <0x00 0x08>;
-					};
-					mpp9@9 {
-						/* Connected to XO thermistor */
-						reg = <0x00 0x09>;
-					};
 				};
 			};
 		};
@@ -778,6 +733,8 @@
 		uok-gpios = <&tlmm 140 GPIO_ACTIVE_LOW>;
 	};
 };
+
+#if 0
 &gsbi3 {
 	status = "okay";
 	qcom,mode = <GSBI_PROT_I2C>;
@@ -808,6 +765,7 @@
 
 	// capacitive proximity??
 };
+#endif
 
 &gsbi4 {
 	status = "okay";
@@ -913,6 +871,66 @@
 		reset-gpios = <&tlmm 70 GPIO_ACTIVE_LOW>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&touch_pins>;
+	};
+};
+
+&pm8058 {
+	interrupts-extended = <&tlmm 88 IRQ_TYPE_LEVEL_LOW>;
+	
+	keypad@148 {
+		linux,keymap = <
+		MATRIX_KEY(0, 0, KEY_MENU)
+		MATRIX_KEY(0, 2, KEY_1)
+		MATRIX_KEY(0, 3, KEY_4)
+		MATRIX_KEY(0, 4, KEY_7)
+		MATRIX_KEY(1, 0, KEY_UP)
+		MATRIX_KEY(1, 1, KEY_LEFT)
+		MATRIX_KEY(1, 2, KEY_DOWN)
+		MATRIX_KEY(1, 3, KEY_5)
+		MATRIX_KEY(1, 3, KEY_8)
+		MATRIX_KEY(2, 0, KEY_HOME)
+		MATRIX_KEY(2, 1, KEY_REPLY)
+		MATRIX_KEY(2, 2, KEY_2)
+		MATRIX_KEY(2, 3, KEY_6)
+		MATRIX_KEY(3, 0, KEY_VOLUMEUP)
+		MATRIX_KEY(3, 1, KEY_RIGHT)
+		MATRIX_KEY(3, 2, KEY_3)
+		MATRIX_KEY(3, 3, KEY_9)
+		MATRIX_KEY(3, 4, KEY_SWITCHVIDEOMODE)
+		MATRIX_KEY(4, 0, KEY_VOLUMEDOWN)
+		MATRIX_KEY(4, 1, KEY_BACK)
+		MATRIX_KEY(4, 2, KEY_CAMERA)
+		MATRIX_KEY(4, 3, KEY_KBDILLUMTOGGLE)
+		>;
+		keypad,num-rows = <6>;
+		keypad,num-columns = <5>;
+	};
+
+	xoadc@197 {
+		/* Reference voltage 2.2 V */
+		xoadc-ref-supply = <&pm8058_l18>;
+
+		/* Board-specific channels */
+		mpp5@5 {
+			/* Connected to AOUT of ALS sensor */
+			reg = <0x00 0x05>;
+		};
+		mpp6@6 {
+			/* Connected to test point TP43 */
+			reg = <0x00 0x06>;
+		};
+		mpp7@7 {
+			/* Connected to battery thermistor */
+			reg = <0x00 0x07>;
+		};
+		mpp8@8 {
+			/* Connected to battery ID detector */
+			reg = <0x00 0x08>;
+		};
+		mpp9@9 {
+			/* Connected to XO thermistor */
+			reg = <0x00 0x09>;
+		};
 	};
 };
 
