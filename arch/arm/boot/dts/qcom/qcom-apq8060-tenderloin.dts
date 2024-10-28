@@ -6,6 +6,8 @@
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/pinctrl/qcom,pmic-gpio.h>
 #include <dt-bindings/pinctrl/qcom,pmic-mpp.h>
+#include <dt-bindings/reset/qcom,gcc-msm8660.h>
+#include <dt-bindings/clock/qcom,mmcc-msm8960.h>
 #include "qcom-msm8660.dtsi"
 #include "pm8058.dtsi"
 
@@ -68,7 +70,71 @@
 		};
 	};
 
+	/*
+	 * These channels from the ADC are simply hardware monitors.
+	 * That is why the ADC is referred to as "HKADC" - HouseKeeping
+	 * ADC.
+	 */
+	iio-hwmon {
+		compatible = "iio-hwmon";
+		io-channels = <&xoadc 0x00 0x01>, /* Battery */
+			    <&xoadc 0x00 0x02>, /* DC in (charger) */
+			    <&xoadc 0x00 0x04>, /* VPH the main system voltage */
+			    <&xoadc 0x00 0x0b>, /* Die temperature */
+			    <&xoadc 0x00 0x0c>, /* Reference voltage 1.25V */
+			    <&xoadc 0x00 0x0d>, /* Reference voltage 0.625V */
+			    <&xoadc 0x00 0x0e>; /* Reference voltage 0.325V */
+	};
+
 	soc {
+		gsbi4: gsbi@16300000 {
+			compatible = "qcom,gsbi-v1.0.0";
+			cell-index = <4>;
+			reg = <0x16300000 0x03>;
+			clocks = <&gcc GSBI4_H_CLK>;
+			clock-names = "iface";
+			#address-cells = <1>;
+			#size-cells = <1>;
+			ranges;
+			status = "disabled";
+
+			gsbi4_i2c: i2c@16380000 {
+				compatible = "qcom,i2c-qup-v1.1.1";
+				reg = <0x16380000 0x1000>;
+				interrupts = <GIC_SPI 153 IRQ_TYPE_LEVEL_HIGH>;
+				clocks = <&gcc GSBI4_QUP_CLK>, <&gcc GSBI4_H_CLK>;
+				clock-names = "core", "iface";
+				#address-cells = <1>;
+				#size-cells = <0>;
+				status = "disabled";
+			};
+		};
+
+		gsbi10: gsbi@19a00000 {
+			compatible = "qcom,gsbi-v1.0.0";
+			cell-index = <10>;
+			reg = <0x19a00000 0x100>;
+			clocks = <&gcc GSBI10_H_CLK>;
+			clock-names = "iface";
+			#address-cells = <1>;
+			#size-cells = <1>;
+			ranges;
+			status = "disabled";
+
+			syscon-tcsr = <&tcsr>;
+
+			gsbi10_i2c: i2c@19a80000 {
+				compatible = "qcom,i2c-qup-v1.1.1";
+				reg = <0x19a80000 0x1000>;
+				interrupts = <GIC_SPI 192 IRQ_TYPE_LEVEL_HIGH>;
+				clocks = <&gcc GSBI10_QUP_CLK>, <&gcc GSBI10_H_CLK>;
+				clock-names = "core", "iface";
+				#address-cells = <1>;
+				#size-cells = <0>;
+				status = "disabled";
+			};
+		};
+
 		gsbi@19800000 {
 			status = "okay";
 			qcom,mode = <GSBI_PROT_I2C>;
@@ -91,6 +157,33 @@
 			};
 		};
 
+		qcom,ssbi@C00000 {
+			compatible = "qcom,ssbi";
+			reg = <0xC00000 0x1000>;
+			qcom,controller-type = "pmic-arbiter";
+
+			pm8901: pmic {
+				compatible = "qcom,pm8901";
+				interrupt-parent = <&tlmm>;
+				interrupts = <91 8>;
+				#interrupt-cells = <2>;
+				interrupt-controller;
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				pm8901_mpps: mpps@27 {
+					compatible = "qcom,pm8901-mpp",
+						     "qcom,ssbi-mpp";
+					reg = <0x27>;
+					gpio-controller;
+					#gpio-cells = <2>;
+					gpio-ranges = <&pm8901_mpps 0 0 4>;
+					interrupt-controller;
+					#interrupt-cells = <2>;
+				};
+			};
+		};
+
 		rpm@104000 {
 			/*
 			 * Set up of the PMIC RPM regulators for this board
@@ -98,6 +191,8 @@
 			 * that means
 			 */
 			pm8901-regulators {
+				compatible = "qcom,rpm-pm8901-regulators";
+
 				vdd_l0-supply = <&pm8901_s4>;
 				vdd_l1-supply = <&vph>;
 				vdd_l2-supply = <&vph>;
@@ -115,58 +210,58 @@
 				lvs3_in-supply = <&pm8058_s2>;
 				mvs_in-supply = <&pm8058_s3>;
 
-				l0 {
+				pm8901_l0: l0 {
 					regulator-min-microvolt = <1200000>;
 					regulator-max-microvolt = <1200000>;
 					bias-pull-down;
 				};
-				l1 {
+				pm8901_l1: l1 {
 					regulator-min-microvolt = <3300000>;
 					regulator-max-microvolt = <3300000>;
 					bias-pull-down;
 					regulator-always-on; // wifi
 				};
-				l2 {
+				pm8901_l2: l2 {
 					regulator-min-microvolt = <2850000>;
 					regulator-max-microvolt = <3300000>;
 					bias-pull-down;
 				};
-				l3 {
+				pm8901_l3: l3 {
 					regulator-min-microvolt = <3300000>;
 					regulator-max-microvolt = <3300000>;
 					bias-pull-down;
 					regulator-always-on; // wifi
 				};
-				l4 {
+				pm8901_l4: l4 {
 					regulator-min-microvolt = <2600000>;
 					regulator-max-microvolt = <2600000>;
 					bias-pull-down;
 				};
-				l5 {
+				pm8901_l5: l5 {
 					regulator-min-microvolt = <2850000>;
 					regulator-max-microvolt = <2850000>;
 					bias-pull-down;
 				};
-				l6 {
+				pm8901_l6: l6 {
 					regulator-min-microvolt = <2200000>;
 					regulator-max-microvolt = <2200000>;
 					bias-pull-down;
 				};
 
 				/* s0 and s1 are SAW regulators controlled over SPM */
-				s2 {
+				pm8901_s2: s2 {
 					regulator-min-microvolt = <1300000>;
 					regulator-max-microvolt = <1300000>;
 					qcom,switch-mode-frequency = <1600000>;
 					bias-pull-down;
 				};
-				s3 {
+				pm8901_s3: s3 {
 					regulator-min-microvolt = <1100000>;
 					regulator-max-microvolt = <1100000>;
 					qcom,switch-mode-frequency = <1600000>;
 					bias-pull-down;
 				};
-				s4 {
+				pm8901_s4: s4 {
 					regulator-min-microvolt = <1225000>;
 					regulator-max-microvolt = <1225000>;
 					qcom,switch-mode-frequency = <1600000>;
@@ -174,14 +269,14 @@
 				};
 
 				/* LVS0 thru 3 and mvs0 are just switches */
-				lvs0 {
+				pm8901_lvs0: lvs0 {
 					// regulator-always-on;
 				};
-				lvs1 { };
-				lvs2 { };
-				lvs3 { };
-				mvs0 {};
+				pm8901_lvs1: lvs1 {};
+				pm8901_lvs2: lvs2 {};
+				pm8901_lvs3: lvs3 {};
 
+				pm8901_mvs: mvs {};
 			};
 
 			pm8058-regulators {
@@ -206,86 +301,86 @@
 				vdd_s4-supply = <&vph>;
 				vdd_ncp-supply = <&vph>;
 
-				l0 {
+				pm8058_l0: l0 {
 					regulator-min-microvolt = <1200000>;
 					regulator-max-microvolt = <1200000>;
 					bias-pull-down;
 				};
-				l1 {
+				pm8058_l1: l1 {
 					regulator-min-microvolt = <1200000>;
 					regulator-max-microvolt = <1200000>;
 					bias-pull-down;
 				};
-				l2 {
+				pm8058_l2: l2 {
 					regulator-min-microvolt = <1800000>;
 					regulator-max-microvolt = <2600000>;
 					bias-pull-down;
 				};
-				l3 {
+				pm8058_l3: l3 {
 					regulator-min-microvolt = <1800000>;
 					regulator-max-microvolt = <1800000>;
 					bias-pull-down;
 				};
-				l4 {
+				pm8058_l4: l4 {
 					regulator-min-microvolt = <2850000>;
 					regulator-max-microvolt = <2850000>;
 					bias-pull-down;
 				};
-				l5 {
+				pm8058_l5: l5 {
 					regulator-min-microvolt = <2850000>;
 					regulator-max-microvolt = <2850000>;
 					bias-pull-down;
 				};
-				l6 {
+				pm8058_l6: l6 {
 					regulator-min-microvolt = <3300000>;
 					regulator-max-microvolt = <3300000>;
 					bias-pull-down;
 				};
-				l7 {
+				pm8058_l7: l7 {
 					regulator-min-microvolt = <1800000>;
 					regulator-max-microvolt = <1800000>;
 					bias-pull-down;
 				};
-				l8 {
+				pm8058_l8: l8 {
 					regulator-min-microvolt = <2900000>;
 					regulator-max-microvolt = <3050000>;
 					bias-pull-down;
 				};
-				l9 {
+				pm8058_l9: l9 {
 					regulator-min-microvolt = <1800000>;
 					regulator-max-microvolt = <1800000>;
 					bias-pull-down;
 				};
-				l10 {
+				pm8058_l10: l10 {
 					regulator-min-microvolt = <3050000>;
 					regulator-max-microvolt = <3050000>;
 					bias-pull-down;
 				};
-				l11 {
+				pm8058_l11: l11 {
 					regulator-min-microvolt = <2850000>;
 					regulator-max-microvolt = <2850000>;
 					bias-pull-down;
 				};
-				l12 {
+				pm8058_l12: l12 {
 					regulator-min-microvolt = <2900000>;
 					regulator-max-microvolt = <2900000>;
 					bias-pull-down;
 				};
-				l13 {
+				pm8058_l13: l13 {
 					regulator-min-microvolt = <2050000>;
 					regulator-max-microvolt = <2050000>;
 					bias-pull-down;
 				};
-				l14 {
+				pm8058_l14: l14 {
 					regulator-min-microvolt = <2850000>;
 					regulator-max-microvolt = <2850000>;
 				};
-				l15 {
+				pm8058_l15: l15 {
 					regulator-min-microvolt = <2850000>;
 					regulator-max-microvolt = <2850000>;
 					bias-pull-down;
 				};
-				l16 {
+				pm8058_l16: l16 {
 					regulator-min-microvolt = <1800000>;
 					regulator-max-microvolt = <1800000>;
 					bias-pull-down;
@@ -295,29 +390,29 @@
 					 */
 					// regulator-always-on;
 				};
-				l17 {
+				pm8058_l17: l17 {
 					// 1.5V according to schematic
 					regulator-min-microvolt = <2600000>;
 					regulator-max-microvolt = <2600000>;
 					bias-pull-down;
 				};
-				l18 {
+				pm8058_l18: l18 {
 					regulator-min-microvolt = <2200000>;
 					regulator-max-microvolt = <2200000>;
 					bias-pull-down;
 				};
-				l19 {
+				pm8058_l19: l19 {
 					regulator-min-microvolt = <1800000>;
 					regulator-max-microvolt = <1800000>;
 					bias-pull-down;
 					regulator-always-on; // wifi
 				};
-				l20 {
+				pm8058_l20: l20 {
 					regulator-min-microvolt = <1800000>;
 					regulator-max-microvolt = <1800000>;
 					bias-pull-down;
 				};
-				l21 {
+				pm8058_l21: l21 {
 					// 1.1 V according to schematic
 					regulator-min-microvolt = <1200000>;
 					regulator-max-microvolt = <1200000>;
@@ -328,31 +423,31 @@
 					 */
 					// regulator-always-on;
 				};
-				l22 {
+				pm8058_l22: l22 {
 					// 1.2 V according to schematic
 					regulator-min-microvolt = <1150000>;
 					regulator-max-microvolt = <1150000>;
 					bias-pull-down;
 				};
-				l23 {
+				pm8058_l23: l23 {
 					// Unused
 					regulator-min-microvolt = <1200000>;
 					regulator-max-microvolt = <1200000>;
 					bias-pull-down;
 				};
-				l24 {
+				pm8058_l24: l24 {
 					// Unused
 					regulator-min-microvolt = <1200000>;
 					regulator-max-microvolt = <1200000>;
 					bias-pull-down;
 				};
-				l25 {
+				pm8058_l25: l25 {
 					regulator-min-microvolt = <1200000>;
 					regulator-max-microvolt = <1200000>;
 					bias-pull-down;
 				};
 
-				s0 {
+				pm8058_s0: s0 {
 					// regulator-min-microvolt = <800000>;
 					// regulator-max-microvolt = <1325000>;
 					regulator-min-microvolt = <1100000>;
@@ -360,7 +455,7 @@
 					qcom,switch-mode-frequency = <1600000>;
 					bias-pull-down;
 				};
-				s1 {
+				pm8058_s1: s1 {
 					// regulator-min-microvolt = <800000>;
 					// regulator-max-microvolt = <1325000>;
 					regulator-min-microvolt = <1000000>;
@@ -369,21 +464,21 @@
 					bias-pull-down;
 					regulator-always-on;
 				};
-				s2 {
+				pm8058_s2: s2 {
 					// 1.3 V according to schematic
 					regulator-min-microvolt = <1200000>;
 					regulator-max-microvolt = <1400000>;
 					qcom,switch-mode-frequency = <1600000>;
 					bias-pull-down;
 				};
-				s3 {
+				pm8058_s3: s3 {
 					regulator-min-microvolt = <1800000>;
 					regulator-max-microvolt = <1800000>;
 					qcom,switch-mode-frequency = <1600000>;
 					bias-pull-down;
 					regulator-always-on;
 				};
-				s4 {
+				pm8058_s4: s4 {
 					regulator-min-microvolt = <2200000>;
 					regulator-max-microvolt = <2200000>;
 					qcom,switch-mode-frequency = <1600000>;
@@ -392,17 +487,130 @@
 				};
 
 				/* LVS0 and LVS1 are just switches */
-				lvs0 {
+				pm8058_lvs0: lvs0 {
 					bias-pull-down;
 				};
-				lvs1 {
+				pm8058_lvs1: lvs1 {
 					bias-pull-down;
 				};
 
-				ncp {
+				pm8058_ncp: ncp {
 					regulator-min-microvolt = <1800000>;
 					regulator-max-microvolt = <1800000>;
 					qcom,switch-mode-frequency = <1600000>;
+				};
+			};
+		};
+
+		usb1: usb@12500000 {
+			compatible = "qcom,ci-hdrc";
+			reg = <0x12500000 0x200>,
+			      <0x12500200 0x200>;
+			interrupts = <GIC_SPI 100 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&gcc USB_HS1_XCVR_CLK>, <&gcc USB_HS1_H_CLK>;
+			clock-names = "core", "iface";
+			assigned-clocks = <&gcc USB_HS1_XCVR_CLK>;
+			assigned-clock-rates = <60000000>;
+			resets = <&gcc USB_HS1_RESET>;
+			reset-names = "core";
+			phy_type = "ulpi";
+			ahb-burst-config = <0>;
+			phys = <&usb_hs1_phy>;
+			phy-names = "usb-phy";
+			status = "disabled";
+			#reset-cells = <1>;
+
+			ulpi {
+				usb_hs1_phy: phy {
+					compatible = "qcom,usb-hs-phy-apq8064",
+						     "qcom,usb-hs-phy";
+					clocks = <&sleep_clk>, <&cxo_board>;
+					clock-names = "sleep", "ref";
+					resets = <&usb1 0>;
+					reset-names = "por";
+					#phy-cells = <0>;
+				};
+			};
+		};
+
+		mmcc: clock-controller@4000000 {
+			compatible = "qcom,mmcc-msm8660";
+			reg = <0x4000000 0x1000>;
+			#clock-cells = <1>;
+			#reset-cells = <1>;
+		};
+
+		gpu: adreno@4300000 {
+			compatible = "qcom,adreno-220.0", "qcom,adreno";
+			reg = <0x04300000 0x20000>;
+			reg-names = "kgsl_3d0_reg_memory";
+			interrupts = <GIC_SPI 80 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-names = "kgsl_3d0_irq";
+			clock-names =
+			    "core_clk",
+			    "iface_clk",
+			    "mem_clk";
+			clocks =
+			    <&mmcc GFX3D_CLK>,
+			    <&mmcc GFX3D_AHB_CLK>,
+			    <&mmcc GMEM_AXI_CLK>;
+
+			qcom,gpu-pwrlevels {
+				compatible = "qcom,gpu-pwrlevels";
+				qcom,gpu-pwrlevel@0 {
+					qcom,gpu-freq = <266667000>;
+				};
+				qcom,gpu-pwrlevel@1 {
+					qcom,gpu-freq = <27000000>;
+				};
+			};
+		};
+
+		mdp: mdp@5100000 {
+			compatible = "qcom,mdp4";
+			reg = <0x05100000 0xf0000>;
+			interrupts = <GIC_SPI 75 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&mmcc MDP_CLK>,
+				 <&mmcc MDP_AHB_CLK>,
+				 <&mmcc MDP_AXI_CLK>,
+				 <&mmcc HDMI_TV_CLK>,
+				 <&mmcc MDP_TV_CLK>,
+				 <&mmcc MDP_LCDC_CLK>;
+			clock-names = "core_clk",
+				      "iface_clk",
+				      "bus_clk",
+				      "hdmi_clk",
+				      "tv_clk",
+				      "lcdc_clk";
+
+			lvds-vccs-3p3v-supply = <&pm8058_l10>;
+
+			ports {
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				port@0 {
+					reg = <0>;
+					mdp_lvds_out: endpoint {
+					};
+				};
+
+				port@1 {
+					reg = <1>;
+					mdp_dsi1_out: endpoint {
+					};
+				};
+
+				port@2 {
+					reg = <2>;
+					mdp_dsi2_out: endpoint {
+					};
+				};
+
+				port@3 {
+					reg = <3>;
+					mdp_dtv_out: endpoint {
+					};
 				};
 			};
 		};
