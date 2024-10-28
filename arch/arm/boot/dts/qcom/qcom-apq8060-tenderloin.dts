@@ -17,7 +17,9 @@
 
 	aliases {
 		serial0 = &gsbi12_serial;
+#if 0
 		display0 = &lg_panel;
+#endif
 	};
 
 	chosen {
@@ -25,6 +27,7 @@
 		bootargs = "console=ttyMSM0,115200 earlycon clk_ignore_unused";
 		stdout-path = "serial0:115200n8";
 
+#if 0
 		#address-cells = <1>;
 		#size-cells = <1>;
 		ranges;
@@ -38,10 +41,16 @@
 			format = "a8r8g8b8";
 			display = <&lg_panel>;
 		};
+#endif
 	};
 
 	clocks {
-		sleep_clk: sleep-clk {};
+		sleep_clk: sleep-clk {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency = <32768>;
+			clock-output-names = "sleep_clk";
+		};
 	};
 
 	regulators {
@@ -299,6 +308,8 @@
 			};
 
 			pm8058-regulators {
+				compatible = "qcom,rpm-pm8058-regulators";
+
 				vdd_l0_l1_lvs-supply = <&pm8058_s3>;
 				vdd_l2_l11_l12-supply = <&vph>;
 				vdd_l3_l4_l5-supply = <&vph>;
@@ -630,17 +641,6 @@
 					reg = <3>;
 					mdp_dtv_out: endpoint {
 					};
-				};
-			};
-		};
-
-		usb@12500000 {
-			status = "okay";
-			dr_mode = "otg";
-			ulpi {
-				phy {
-					v3p3-supply = <&pm8058_l6>;
-					v1p8-supply = <&pm8058_l7>;
 				};
 			};
 		};
@@ -1122,5 +1122,14 @@
 			reg = <0x00 0x09>;
 		};
 	};
+};
+
+&usb1 {
+	status = "okay";
+	dr_mode = "otg";
+};
+&usb_hs1_phy {
+	v3p3-supply = <&pm8058_l6>;
+	v1p8-supply = <&pm8058_l7>;
 };
 
