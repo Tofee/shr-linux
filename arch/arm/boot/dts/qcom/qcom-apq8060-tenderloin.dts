@@ -1092,7 +1092,7 @@
 		keypad,num-columns = <5>;
 	};
 
-	xoadc@197 {
+	xoadc: xoadc@197 {
 		/* Reference voltage 2.2 V */
 		xoadc-ref-supply = <&pm8058_l18>;
 
