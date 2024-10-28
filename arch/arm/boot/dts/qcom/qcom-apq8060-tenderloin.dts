@@ -40,6 +40,10 @@
 		};
 	};
 
+	clocks {
+		sleep_clk: sleep-clk {};
+	};
+
 	regulators {
 		compatible = "simple-bus";
 
