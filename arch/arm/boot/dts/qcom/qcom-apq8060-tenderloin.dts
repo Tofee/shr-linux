@@ -17,12 +17,27 @@
 
 	aliases {
 		serial0 = &gsbi12_serial;
+		display0 = &lg_panel;
 	};
 
 	chosen {
 		/* Bootloader passes console=tty1, which overrides stdout-path */
 		bootargs = "console=ttyMSM0,115200 earlycon clk_ignore_unused";
 		stdout-path = "serial0:115200n8";
+
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+		fb0: framebuffer@7f600000 {
+			compatible = "simple-framebuffer";
+			status = "okay";
+			reg = <0x7f600000 (1024 * 768 * 4 * 3)>;
+			width = <1024>;
+			height = <768>;
+			stride = <(1024 * 4)>;
+			format = "a8r8g8b8";
+			display = <&lg_panel>;
+		};
 	};
 
 	regulators {
