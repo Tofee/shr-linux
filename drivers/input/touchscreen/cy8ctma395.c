@@ -35,6 +35,10 @@
 #define RESPONSE_WAIT			0x2
 #define RESPONSE_FAULT			0x4
 
+#define GPIO_CTP_SCL				73
+#define GPIO_CTP_SDA				72
+#define GPIO_CY8CTMA395_XRES		70
+
 struct addr_data_pair {
 	u32 addr;
 	u32 data;
@@ -1089,6 +1093,21 @@ static int cy8ctma395_device_probe(struct platform_device *pdev)
 	struct device *dev = &pdev->dev;
 	struct cy8ctma395_platform_data *pdat = pdev->dev.platform_data;
 
+	if (!pdat) {
+		pdev->dev.platform_data = pdat = devm_kzalloc(dev, sizeof(struct cy8ctma395_platform_data), GFP_KERNEL);
+		pdat->swdck_request = NULL;
+		pdat->swdio_request = NULL;
+		pdat->vdd_enable = NULL;
+		pdat->xres = GPIO_CY8CTMA395_XRES;
+		pdat->xres_us = 1000;
+		pdat->swdck = GPIO_CTP_SCL;
+		pdat->swdio = GPIO_CTP_SDA;
+		pdat->swd_wait_retries = 0;
+		pdat->port_acquire_retries = 4;
+		pdat->status_reg_timeout_ms = 1000;
+		pdat->nr_blocks = 256;
+	}
+
 	dat = devm_kzalloc(dev, sizeof(struct cy8ctma395_device_data), GFP_KERNEL);
 	if (!dat) {
 		rc = -ENOMEM;
@@ -1117,7 +1136,7 @@ static int cy8ctma395_device_probe(struct platform_device *pdev)
 	if (rc < 0)
 		goto attr_xres_failed;
 
-	if (pdat && pdat->vdd_enable) {
+	if (pdat->vdd_enable) {
 		cy8ctma395_xres_assert(pdat, 1);
 		pdat->vdd_enable(1);
 		cy8ctma395_xres_assert(pdat, 0);
