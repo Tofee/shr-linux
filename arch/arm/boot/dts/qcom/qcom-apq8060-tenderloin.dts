@@ -802,32 +802,23 @@
 		bias-disable;
 	};
 
-	gsbi10_serial_pins: gsbi10-serial-state {
+	gsbi10_i2c_pins: i2c10-state {
 		rx-pins {
 			pins = "gpio71";
 			function = "gsbi10";
 			drive-strength = <8>;
 			bias-pull-up;
 		};
-	};
-
-	gsbi10_i2c_pins: i2c10-state {
-		reset-pins {
-			pins = "gpio70";
-			function = "gsbi10";
-			drive-strength = <8>;
-			bias-disable;
-		};
 		sda-pins {
 			pins = "gpio72";
 			function = "gsbi10";
-			drive-strength = <16>;
+			drive-strength = <8>;
 			bias-disable;
 		};
 		scl-pins {
 			pins = "gpio73";
 			function = "gsbi10";
-			drive-strength = <16>;
+			drive-strength = <2>;
 			bias-disable;
 		};
 	};
@@ -930,7 +921,7 @@
 
 		reset-pins {
 			pins = "gpio70";
-			function = "gpio";
+			function = "gsbi10";
 			drive-strength = <16>;
 			bias-disable;
 		};
@@ -1078,20 +1069,42 @@
 
 &gsbi10 {
 	status = "okay";
-	qcom,mode = <GSBI_PROT_I2C_UART>;
+	qcom,mode = <GSBI_PROT_I2C>;
 };
-
+/*
 &gsbi10_serial {
 	status = "okay";
 	pinctrl-names = "default";
 	pinctrl-0 = <&gsbi10_serial_pins>;
 };
-
+*/
 &gsbi10_i2c {
 	status = "okay";
 	clock-frequency = <100000>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&gsbi10_i2c_pins>;
+
+	touchscreen: cy8ctma395@67 {
+                // try reusing the generic cyttsp_i2c driver
+		compatible = "cypress,cy8ctma340"; // should be cy8ctma340
+		reg = <0x67>;
+		
+		vcpin-supply = <&pm8058_s3>;   // VCPIN is the analog voltage supply
+		vdd-supply = <&pm8058_l10>;    // VDD is the digital voltage supply
+
+		interrupts-extended = <&tlmm 123 IRQ_TYPE_LEVEL_LOW>; /* 3G: 45 */
+		reset-gpios = <&tlmm 70 GPIO_ACTIVE_LOW>;
+
+		touchscreen-size-x = <1024>;
+		touchscreen-size-y = <768>;
+		active-interval-ms = <0>;
+		touch-timeout-ms = <255>;
+		lowpower-interval-ms = <10>;
+		bootloader-key = /bits/ 8 <0x00 0x01 0x02 0x03 0x04 0x05 0x06 0x07>;
+
+		pinctrl-names = "default";
+		pinctrl-0 = <&touch_pins>;
+	};
 };
 
 &pm8058 {
