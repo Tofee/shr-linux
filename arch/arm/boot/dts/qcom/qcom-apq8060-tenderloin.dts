@@ -12,7 +12,7 @@
 #include "pm8058.dtsi"
 
 // there can be only one
-#define USE_I2C_TOUCHSCREEN_DRIVER 1
+#define USE_I2C_TOUCHSCREEN_DRIVER 0
 #if USE_I2C_TOUCHSCREEN_DRIVER
 #define USE_UART_TOUCHSCREEN_DRIVER 0
 #else
@@ -915,32 +915,26 @@
 	};
 
 	gsbi10_i2c_pins: i2c10-state {
-		reset-pins {
-			pins = "gpio70";
-			function = "gsbi10";
-			drive-strength = <16>;
-			bias-disable;
-		};
-		sda-pins {
-			pins = "gpio72";
+		sda-scl-pins {
+			pins = "gpio72", "gpio73";
 			function = "gsbi10";
 			drive-strength = <8>;
-			bias-disable;
-		};
-		scl-pins {
-			pins = "gpio73";
-			function = "gsbi10";
-			drive-strength = <2>;
 			bias-disable;
 		};
 	};
 
 	gsbi10_serial_pins: gsbi10-serial-state {
-		rx-pins {
-			pins = "gpio71";
+		reset-pins {
+			pins = "gpio70"; // TP_PWR_RST
 			function = "gsbi10";
 			drive-strength = <8>;
-			bias-pull-up;
+			bias-disable;
+		};
+		tx-pins {
+			pins = "gpio71";
+			function = "gsbi10";
+			drive-strength = <2>;
+			bias-disable;
 		};
 	};
 };
@@ -1086,7 +1080,12 @@
 
 &gsbi10 {
 	status = "okay";
+
+#if USE_I2C_TOUCHSCREEN_DRIVER
+	qcom,mode = <GSBI_PROT_I2C>;
+#else
 	qcom,mode = <GSBI_PROT_I2C_UART>;
+#endif
 };
 
 &gsbi10_serial {
@@ -1097,7 +1096,7 @@
 
 &gsbi10_i2c {
 	status = "okay";
-	clock-frequency = <100000>;
+	clock-frequency = <400000>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&gsbi10_i2c_pins>;
 
@@ -1111,7 +1110,7 @@
 		vdd-supply = <&pm8058_l10>;    // VDD is the digital voltage supply
 
 		interrupts-extended = <&tlmm 123 IRQ_TYPE_LEVEL_LOW>; /* 3G: 45 */
-//		reset-gpios = <&tlmm 70 GPIO_ACTIVE_LOW>;
+		reset-gpios = <&tlmm 70 GPIO_ACTIVE_LOW>;
 
 		touchscreen-size-x = <1024>;
 		touchscreen-size-y = <768>;
