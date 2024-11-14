@@ -22,6 +22,11 @@
 // beware, framebuffer conflicts with jack UART debugging
 #define USE_FRAMEBUFFER 0
 
+// bugged for now
+#define ENABLE_SDCC4 0
+
+#define ENABLE_BLUETOOTH 1
+
 / {
 	model = "HP TouchPad";
 	compatible = "qcom,apq8060-tenderloin", "qcom,msm8660";
@@ -1024,7 +1029,7 @@
 	// 78: mt9m113 defconfig: CONFIG_VIDEO_ATOMISP_MT9M114
 };
 
-#if 0
+#if ENABLE_BLUETOOTH
 &gsbi6 {
 	status = "okay";
 	qcom,mode = <GSBI_PROT_UART_W_FC>;
@@ -1042,17 +1047,17 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&gsbi6_uart_pins>;
 
-	/* bluetooth {
+	bluetooth {
 		compatible = "brcm,bcm43438-bt";
-		// max-speed = <3000000>;
+		max-speed = <3000000>;
 
-		//pinctrl-names = "default";
-		// pinctrl-0 = <&bt_pin>, <&wlan_sleep_clk_pin>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&bt_pin>, <&wlan_sleep_clk_pin>;
 
-		//host-wakeup-gpios = <&msmgpio 42 GPIO_ACTIVE_HIGH>;
-		//device-wakeup-gpios = <&msmgpio 62 GPIO_ACTIVE_HIGH>;
-		//shutdown-gpios = <&msmgpio 41 GPIO_ACTIVE_HIGH>;
-	}; */
+		host-wakeup-gpios = <&tlmm 129 GPIO_ACTIVE_HIGH>;
+		device-wakeup-gpios = <&tlmm 131 GPIO_ACTIVE_HIGH>;
+		shutdown-gpios = <&tlmm 130 GPIO_ACTIVE_HIGH>;
+	};
 };
 #endif
 
