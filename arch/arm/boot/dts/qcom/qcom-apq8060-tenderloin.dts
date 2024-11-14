@@ -728,6 +728,11 @@
 		compatible = "cypress,cy8ctma395";
 	};
 #endif
+
+	atheros {
+		compatible = "atheros,ath6kl";
+		atheros,board-id = "SD32";
+	};
 };
 
 &tlmm {
@@ -758,19 +763,16 @@
 	sdcc4_pins: sdcc4-state {
 		clk-pins {
 			pins = "sdc4_clk";
-			function = "sdc4";
 			drive-strength = <8>;
 			bias-disable;
 		};
 		cmd-pins {
 			pins = "sdc4_cmd";
-			function = "sdc4";
 			drive-strength = <8>;
 			bias-pull-up;
 		};
 		data-pins {
 			pins = "sdc4_data";
-			function = "sdc4";
 			drive-strength = <8>;
 			bias-pull-up;
 		};
@@ -951,6 +953,18 @@
 	vmmc-supply = <&pm8901_l5>;
 	vqmmc-supply = <&pm8901_lvs0>;
 };
+
+#if ENABLE_SDCC4
+// if enabled, then the initramfs won't find mmcblk0p13 for some reason
+&sdcc4 {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&sdcc4_pins>;
+
+	vmmc-supply = <&pm8058_s3>;
+	//vqmmc-supply = <&pm8058_l19>;
+};
+#endif
 
 &gsbi3 {
 	status = "okay";
