@@ -963,7 +963,6 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&gsbi3_i2c_pins>;
 
-#if 1
 	mpu3050@68 {
 		/* Gyrometer */
 		compatible = "invensense,mpu3050";
@@ -975,30 +974,23 @@
 		vlogic-supply = <&pm8901_lvs3>; // 1.8V pm8058_l15 type > TOPAZ_DVT
 		vdd-supply = <&pm8058_l15>; // 2.85V
 	};
-#endif
 
 	lsm303dlh@18 {
 		/* Accelerometer */
 		compatible = "st,lsm303dlh-accel";
 		st,drdy-int-pin = <1>;
 		reg = <0x18>;
-		vdd-supply = <&pm8058_l15>; // 2.85V
-		vddio-supply = <&pm8058_s3>; // 1.8V s3
-//		pinctrl-names = "default";
-//		pinctrl-0 = <&accel_gpio>;
+		vdd-supply = <&pm8058_l15>;   // 2.85V
+		vddio-supply = <&pm8058_s3>;  // 1.8V s3
 	};
 	lsm303dlh@1e {
 		/* Magnetometer */
 		compatible = "st,lsm303dlh-magn";
 		reg = <0x1e>;
-		vdd-supply = <&pm8058_l15>;
-		vddio-supply = <&pm8058_s3>;
-//		pinctrl-names = "default";
-//		pinctrl-0 = <&magneto_gpio>;
+		vdd-supply = <&pm8058_l15>;   // 2.85V
+		vddio-supply = <&pm8058_s3>;  // 1.8V
 	};
 
-	// 18: lsm303dlh_acc
-	// 1e: lsm303dlh_mag
 	// 44: isl29023 // ALS
 
 	// capacitive proximity??
@@ -1015,7 +1007,7 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&gsbi4_i2c_pins>;
 
-	// 78: mt9m113
+	// 78: mt9m113 defconfig: CONFIG_VIDEO_ATOMISP_MT9M114
 };
 
 #if 0
