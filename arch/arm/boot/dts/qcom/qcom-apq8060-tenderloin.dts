@@ -917,9 +917,19 @@
 			output-low;
 		};
 	};
+	
 	wlan_gpios: wlan-state {
 		irq-pins {
-			pins = "gpio93", "gpio135", "gpio137";
+			pins = "gpio93", "gpio137";
+			function = "gpio";
+			drive-strength = <2>;
+			bias-disable;
+		};
+	};
+	
+	wlan_gpios_reset: wlan-reset {
+		reset-pins {
+			pins = "gpio135";
 			function = "gpio";
 			drive-strength = <2>;
 			bias-disable;
@@ -977,14 +987,22 @@
 	vmmc-supply = <&pm8058_s3>;
 	//vqmmc-supply = null;
 
+	mmc-pwrseq = <&ath6kl_pwrseq>;
 	// mpm_sdiowakeup_int = MSM_MPM_PIN_SDC4_DAT1 /* 24 */
 
+	ath6kl_pwrseq: ath6kl_pwrseq {
+			compatible = "mmc-pwrseq-simple";
+			pinctrl-names = "default";
+			pinctrl-0 = <&wlan_gpios_reset>;
+			reset-gpios = <&tlmm 135 GPIO_ACTIVE_LOW>;
+	};
+
 #if 1
-	atheros@0 {
+	atheros@1 {
 		compatible = "atheros,ath6kl";
 		atheros,board-id = "SD32";
 		
-		reg = <0>;
+		reg = <1>;
 		bus-width = <4>;
 
 		pinctrl-names = "default";
