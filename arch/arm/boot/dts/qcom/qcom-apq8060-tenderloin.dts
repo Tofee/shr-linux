@@ -22,19 +22,16 @@
 // beware, framebuffer conflicts with jack UART debugging
 #define USE_FRAMEBUFFER 0
 
-// bugged for now
-#define ENABLE_SDCC4 0
-
-#define ENABLE_BLUETOOTH 1
-
 / {
 	model = "HP TouchPad";
 	compatible = "qcom,apq8060-tenderloin", "qcom,msm8660";
 
 	aliases {
-		serial0 = &gsbi12_serial;
+		mmc0 = &sdcc1;	/* mmcblk0 for eMMC/SD */
+		serial0 = &gsbi12_serial; // becomes /dev/ttyMSM0
+		serial1 = &gsbi6_serial;  // becomes /dev/ttyMSM1
 #if USE_UART_TOUCHSCREEN_DRIVER
-		serial1 = &gsbi10_serial; // becomes /dev/ttyMSM1
+		serial2 = &gsbi10_serial; // becomes /dev/ttyMSM2
 #endif
 		display0 = &lg_panel;
 	};
@@ -733,11 +730,6 @@
 		compatible = "cypress,cy8ctma395";
 	};
 #endif
-
-	atheros {
-		compatible = "atheros,ath6kl";
-		atheros,board-id = "SD32";
-	};
 };
 
 &tlmm {
@@ -808,7 +800,7 @@
 		bias-disable;
 	};
 
-	gsbi6_uart_pins: i2c4-state {
+	gsbi6_uart_pins: i2c6-state {
 		pins = "gpio53", "gpio54", "gpio55", "gpio56";
 		function = "gsbi6";
 		drive-strength = <16>;
@@ -976,7 +968,6 @@
 	vqmmc-supply = <&pm8901_lvs0>;
 };
 
-#if ENABLE_SDCC4
 // if enabled, then the initramfs won't find mmcblk0p13 for some reason
 &sdcc4 {
 	status = "okay";
@@ -984,9 +975,28 @@
 	pinctrl-0 = <&sdcc4_pins>;
 
 	vmmc-supply = <&pm8058_s3>;
-	//vqmmc-supply = <&pm8058_l19>;
-};
+	//vqmmc-supply = null;
+
+	// mpm_sdiowakeup_int = MSM_MPM_PIN_SDC4_DAT1 /* 24 */
+
+#if 1
+	atheros@0 {
+		compatible = "atheros,ath6kl";
+		atheros,board-id = "SD32";
+		
+		reg = <0>;
+		bus-width = <4>;
+
+		pinctrl-names = "default";
+		pinctrl-0 = <&wlan_gpios>;
+	};
+#else
+	atheros {
+		compatible = "atheros,ath6kl";
+		atheros,board-id = "SD32";
+	};
 #endif
+};
 
 &gsbi3 {
 	status = "okay";
@@ -1046,7 +1056,6 @@
 	// 78: mt9m113 defconfig: CONFIG_VIDEO_ATOMISP_MT9M114
 };
 
-#if ENABLE_BLUETOOTH
 &gsbi6 {
 	status = "okay";
 	qcom,mode = <GSBI_PROT_UART_W_FC>;
@@ -1064,19 +1073,26 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&gsbi6_uart_pins>;
 
+	uart-has-rtscts;
+
 	bluetooth {
 		compatible = "brcm,bcm43438-bt";
-		max-speed = <3000000>;
+
+		vddio-supply = <&pm8058_s3>;  // 1.8V s3
+		vbat-supply = <&pm8058_s3>;  // 1.8V s3
+
+//		max-speed = <115200>;
+//		brcm,bt-pcm-int-params = [00 02 00 01 01]; // value to be fixed, PCM link to audio
 
 		pinctrl-names = "default";
 		pinctrl-0 = <&bt_pin>;
 
+		reset-gpios = <&tlmm 138 GPIO_ACTIVE_HIGH>;
 		host-wakeup-gpios = <&tlmm 129 GPIO_ACTIVE_HIGH>;
 		device-wakeup-gpios = <&tlmm 131 GPIO_ACTIVE_HIGH>;
-		shutdown-gpios = <&tlmm 138 GPIO_ACTIVE_HIGH>;
+		shutdown-gpios = <&tlmm 130 GPIO_ACTIVE_HIGH>;
 	};
 };
-#endif
 
 &gsbi8 {
 	status = "okay";
