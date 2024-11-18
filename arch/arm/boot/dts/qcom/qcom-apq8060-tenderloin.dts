@@ -22,6 +22,9 @@
 // beware, framebuffer conflicts with jack UART debugging
 #define USE_FRAMEBUFFER 0
 
+// not tested
+#define USE_BACKLIGHT 1
+
 / {
 	model = "HP TouchPad";
 	compatible = "qcom,apq8060-tenderloin", "qcom,msm8660";
@@ -672,8 +675,9 @@
 		// VDD_LVDS_3.3: l10
 		// ?? Due to hardware change, it will not use GPIO102 as 5V boost Enable since EVT1
 
-		// GPIO_BACKLIGHT_EN PM8058_GPIO_PM_TO_SYS(25-1) => 173 + 25 - 1
-		// backlight = <&pm8058_gpio 25 GPIO_ACTIVE_LOW>; // GPIO25 => LCD_BL_EN, GPIO24 => LCD_BL_PWM
+#if USE_BACKLIGHT
+		backlight = <&backlight>;
+#endif
 
 		power-supply = <&pm8058_l10>;
 
@@ -687,16 +691,16 @@
 		};
 	};
 
-#if 0
+#if USE_BACKLIGHT
 	backlight: backlight {
 		/* TPS61187's max PWM freq allowance is 22Khz */
 
 		// maybe use compatible = "ti,tps65217" ?
 		compatible = "pwm-backlight";
 
-		enable-gpios = <&pm8058_gpio 25 GPIO_ACTIVE_HIGH>;
+		enable-gpios = <&backlight_enable_gpios>;
 		power-supply = <&pm8058_l10>;
-		pwms = <&pm8058_gpio 24 GPIO_ACTIVE_HIGH>; // GPIO24 on pm8058_gpio => LCD_BL_PWM
+		pwms = <&backlight_pwm_gpios>;
 
 		brightness-levels = <3 255>;
 		num-interpolated-steps = <252>;
@@ -972,6 +976,27 @@
 			function = "gsbi10";
 			drive-strength = <2>;
 			bias-disable;
+		};
+	};
+};
+
+&pm8058_gpio {
+	backlight_pwm_gpios: backlight-pwm-state {
+		pinconf {
+			pins = "gpio24";
+			function = "normal";
+			input-enable;
+			bias-disable;
+			power-source = <PM8058_GPIO_S3>;
+		};
+	};
+	backlight_enable_gpios: backlight-enable-state {
+		pinconf {
+			pins = "gpio25";
+			function = "normal";
+			input-enable;
+			bias-disable;
+			power-source = <PM8058_GPIO_S3>;
 		};
 	};
 };
