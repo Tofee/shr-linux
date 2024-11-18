@@ -109,21 +109,19 @@
 		};
 	};
 
-	/*
-	 * These channels from the ADC are simply hardware monitors.
-	 * That is why the ADC is referred to as "HKADC" - HouseKeeping
-	 * ADC.
-	 */
-	iio-hwmon {
-		compatible = "iio-hwmon";
-		io-channels = <&xoadc 0x00 0x01>, /* Battery */
-			    <&xoadc 0x00 0x02>, /* DC in (charger) */
-			    <&xoadc 0x00 0x04>, /* VPH the main system voltage */
-			    <&xoadc 0x00 0x0b>, /* Die temperature */
-			    <&xoadc 0x00 0x0c>, /* Reference voltage 1.25V */
-			    <&xoadc 0x00 0x0d>, /* Reference voltage 0.625V */
-			    <&xoadc 0x00 0x0e>; /* Reference voltage 0.325V */
+	ath6kl_pwrseq: ath6kl_pwrseq {
+			compatible = "mmc-pwrseq-simple";
+			pinctrl-names = "default";
+			pinctrl-0 = <&wlan_gpios_reset>;
+			reset-gpios = <&tlmm 135 GPIO_ACTIVE_LOW>;
 	};
+
+#if 0
+	ath6kl_card: atheros {
+		compatible = "atheros,ath6kl";
+		atheros,board-id = "SD32";
+	};
+#endif
 
 	soc {
 		gsbi4: gsbi@16300000 {
@@ -926,18 +924,18 @@
 		};
 	};
 	
-	wlan_gpios: wlan-state {
+	wlan_gpios_reset: wlan-reset-state {
 		irq-pins {
-			pins = "gpio93", "gpio137";
+			pins = "gpio135";
 			function = "gpio";
-			drive-strength = <2>;
 			bias-disable;
+			power-source = <PM8058_GPIO_S3>;
 		};
 	};
 	
-	wlan_gpios_reset: wlan-reset {
-		reset-pins {
-			pins = "gpio135";
+	wlan_gpios: wlan-state {
+		irq-pins {
+			pins = "gpio93", "gpio137";
 			function = "gpio";
 			drive-strength = <2>;
 			bias-disable;
@@ -992,18 +990,22 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&sdcc4_pins>;
 
-	vmmc-supply = <&pm8058_s3>;
-	//vqmmc-supply = null;
+	vmmc-supply = <&pm8058_s3>; // 1V8
+	//vqmmc-supply = <&pm8901_l1>;
 
+	/* not needed? TBC */
+	broken-cd;
+	
 	mmc-pwrseq = <&ath6kl_pwrseq>;
 	// mpm_sdiowakeup_int = MSM_MPM_PIN_SDC4_DAT1 /* 24 */
 
-	ath6kl_pwrseq: ath6kl_pwrseq {
-			compatible = "mmc-pwrseq-simple";
-			pinctrl-names = "default";
-			pinctrl-0 = <&wlan_gpios_reset>;
-			reset-gpios = <&tlmm 135 GPIO_ACTIVE_LOW>;
-	};
+	/*
+	 * To intiialize correctly, wifi needs to enable the following regulators:
+	   "8901_l3"  - 3.3V - VREG_L3B_3V3      - WLAN_PA_3V3
+	   "8901_l1"  - 3.3V - VREG_L1B_3V3      - VDD_WLAN_3V3
+	   "8058_l19" - 1.8V - VREG_L19A_1V8     - VDD_1.8
+	   "8058_s3"  - 1.8V - VREG_S3A_1V8_WLAN - DVDD_SDIO_1V8 etc.
+		 */
 
 #if 1
 	atheros@1 {
