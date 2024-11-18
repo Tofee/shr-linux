@@ -933,7 +933,6 @@
 			pins = "gpio135";
 			function = "gpio";
 			bias-disable;
-			power-source = <PM8058_GPIO_S3>;
 		};
 	};
 	
@@ -987,7 +986,6 @@
 			function = "normal";
 			input-enable;
 			bias-disable;
-			power-source = <PM8058_GPIO_S3>;
 		};
 	};
 	backlight_enable_gpios: backlight-enable-state {
@@ -996,7 +994,6 @@
 			function = "normal";
 			input-enable;
 			bias-disable;
-			power-source = <PM8058_GPIO_S3>;
 		};
 	};
 };
