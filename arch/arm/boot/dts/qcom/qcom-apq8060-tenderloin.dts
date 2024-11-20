@@ -22,9 +22,6 @@
 // beware, framebuffer conflicts with jack UART debugging
 #define USE_FRAMEBUFFER 0
 
-// not tested
-#define USE_BACKLIGHT 1
-
 / {
 	model = "HP TouchPad";
 	compatible = "qcom,apq8060-tenderloin", "qcom,msm8660";
@@ -592,6 +589,9 @@
 			    <&mmcc GFX3D_AHB_CLK>,
 			    <&mmcc GMEM_AXI_CLK>;
 
+			// vdd-supply = <&pm8058_l10>;   // TBC
+			// vddcx-supply = <&pm8058_l10>; // TBC
+
 			qcom,gpu-pwrlevels {
 				compatible = "qcom,gpu-pwrlevels";
 				qcom,gpu-pwrlevel@0 {
@@ -621,6 +621,7 @@
 				      "lcdc_clk";
 
 			lvds-vccs-3p3v-supply = <&pm8058_l10>;
+			// lvds-vdda-supply = <&pm8058_l10>;   // TBC
 
 			status = "okay";
 			memory-region = <&scanout_mem>;
@@ -674,10 +675,6 @@
 		// VDD_LVDS_3.3: l10
 		// ?? Due to hardware change, it will not use GPIO102 as 5V boost Enable since EVT1
 
-#if USE_BACKLIGHT
-		backlight = <&backlight>;
-#endif
-
 		power-supply = <&pm8058_l10>;
 
 		pinctrl-names = "default";
@@ -690,22 +687,6 @@
 		};
 	};
 
-#if USE_BACKLIGHT
-	backlight: backlight {
-		/* TPS61187's max PWM freq allowance is 22Khz */
-
-		// maybe use compatible = "ti,tps65217" ?
-		compatible = "pwm-backlight";
-
-		enable-gpios = <&backlight_enable_gpios>;
-		power-supply = <&pm8058_l10>;
-		pwms = <&backlight_pwm_gpios>;
-
-		brightness-levels = <3 255>;
-		num-interpolated-steps = <252>;
-		default-brightness-level = <60>;
-	};
-#endif
 	/*
 	 * Fast charging at up to 1400 mA is supported by the hardware, but
 	 * requires cooperation with the USB controller and A6 battery
@@ -978,25 +959,6 @@
 	};
 };
 
-&pm8058_gpio {
-	backlight_pwm_gpios: backlight-pwm-state {
-		pinconf {
-			pins = "gpio24";
-			function = "normal";
-			input-enable;
-			bias-disable;
-		};
-	};
-	backlight_enable_gpios: backlight-enable-state {
-		pinconf {
-			pins = "gpio25";
-			function = "normal";
-			input-enable;
-			bias-disable;
-		};
-	};
-};
-
 &sdcc1 {
 	status = "okay";
 	pinctrl-names = "default";
@@ -1022,11 +984,11 @@
 
 	/*
 	 * To intiialize correctly, wifi needs to enable the following regulators:
-	   "8901_l3"  - 3.3V - VREG_L3B_3V3      - WLAN_PA_3V3
-	   "8901_l1"  - 3.3V - VREG_L1B_3V3      - VDD_WLAN_3V3
-	   "8058_l19" - 1.8V - VREG_L19A_1V8     - VDD_1.8
-	   "8058_s3"  - 1.8V - VREG_S3A_1V8_WLAN - DVDD_SDIO_1V8 etc.
-		 */
+	 *  "8901_l3"  - 3.3V - VREG_L3B_3V3      - WLAN_PA_3V3
+	 *  "8901_l1"  - 3.3V - VREG_L1B_3V3      - VDD_WLAN_3V3
+	 *  "8058_l19" - 1.8V - VREG_L19A_1V8     - VDD_1.8
+	 *  "8058_s3"  - 1.8V - VREG_S3A_1V8_WLAN - DVDD_SDIO_1V8 etc.
+	 */
 
 #if 1
 	atheros@1 {
@@ -1247,65 +1209,85 @@
 &pm8058 {
 	interrupts-extended = <&tlmm 88 IRQ_TYPE_LEVEL_LOW>;
 	
-	keypad@148 {
-		linux,keymap = <
-		MATRIX_KEY(0, 0, KEY_MENU)
-		MATRIX_KEY(0, 2, KEY_1)
-		MATRIX_KEY(0, 3, KEY_4)
-		MATRIX_KEY(0, 4, KEY_7)
-		MATRIX_KEY(1, 0, KEY_UP)
-		MATRIX_KEY(1, 1, KEY_LEFT)
-		MATRIX_KEY(1, 2, KEY_DOWN)
-		MATRIX_KEY(1, 3, KEY_5)
-		MATRIX_KEY(1, 3, KEY_8)
-		MATRIX_KEY(2, 0, KEY_HOME)
-		MATRIX_KEY(2, 1, KEY_REPLY)
-		MATRIX_KEY(2, 2, KEY_2)
-		MATRIX_KEY(2, 3, KEY_6)
-		MATRIX_KEY(3, 0, KEY_VOLUMEUP)
-		MATRIX_KEY(3, 1, KEY_RIGHT)
-		MATRIX_KEY(3, 2, KEY_3)
-		MATRIX_KEY(3, 3, KEY_9)
-		MATRIX_KEY(3, 4, KEY_SWITCHVIDEOMODE)
-		MATRIX_KEY(4, 0, KEY_VOLUMEDOWN)
-		MATRIX_KEY(4, 1, KEY_BACK)
-		MATRIX_KEY(4, 2, KEY_CAMERA)
-		MATRIX_KEY(4, 3, KEY_KBDILLUMTOGGLE)
-		>;
-		keypad,num-rows = <6>;
-		keypad,num-columns = <5>;
+	pm8058_pwm: led-backlight@13c {
+		compatible = "qcom,pm8058-lpg";
+		reg = <0x13c>;
+		label = "backlight";
 	};
+};
 
-	xoadc: xoadc@197 {
-		/* Reference voltage 2.2 V */
-		xoadc-ref-supply = <&pm8058_l18>;
+&pm8058_gpio {
+	backlight_pwm_gpios: backlight-pwm-state {
+		pinconf {
+			pins = "gpio24";
+			function = "func2";
+			bias-disable;
+			power-source = <PM8058_GPIO_VPH>;
+		};
+	};
+	backlight_enable_gpios: backlight-enable-state {
+		pinconf {
+			pins = "gpio25";
+			function = "normal";
+			bias-disable;
+			power-source = <PM8058_GPIO_VPH>;
+		};
+	};
+};
 
-		/* Board-specific channels */
-		adc-channel@5 {
-			/* Connected to AOUT of ALS sensor */
-			reg = <0x00 0x05>;
-		};
-		adc-channel@6 {
-			/* Connected to test point TP43 */
-			reg = <0x00 0x06>;
-		};
-		adc-channel@7 {
-			/* Connected to battery thermistor */
-			reg = <0x00 0x07>;
-		};
-		adc-channel@8 {
-			/* Connected to battery ID detector */
-			reg = <0x00 0x08>;
-		};
-		adc-channel@9 {
-			/* Connected to XO thermistor */
-			reg = <0x00 0x09>;
-		};
+&pm8058_keypad {
+	linux,keymap = <
+	MATRIX_KEY(0, 0, KEY_MENU)
+	MATRIX_KEY(0, 2, KEY_1)
+	MATRIX_KEY(0, 3, KEY_4)
+	MATRIX_KEY(0, 4, KEY_7)
+	MATRIX_KEY(1, 0, KEY_UP)
+	MATRIX_KEY(1, 1, KEY_LEFT)
+	MATRIX_KEY(1, 2, KEY_DOWN)
+	MATRIX_KEY(1, 3, KEY_5)
+	MATRIX_KEY(1, 3, KEY_8)
+	MATRIX_KEY(2, 0, KEY_HOME)
+	MATRIX_KEY(2, 1, KEY_REPLY)
+	MATRIX_KEY(2, 2, KEY_2)
+	MATRIX_KEY(2, 3, KEY_6)
+	MATRIX_KEY(3, 0, KEY_VOLUMEUP)
+	MATRIX_KEY(3, 1, KEY_RIGHT)
+	MATRIX_KEY(3, 2, KEY_3)
+	MATRIX_KEY(3, 3, KEY_9)
+	MATRIX_KEY(3, 4, KEY_SWITCHVIDEOMODE)
+	MATRIX_KEY(4, 0, KEY_VOLUMEDOWN)
+	MATRIX_KEY(4, 1, KEY_BACK)
+	MATRIX_KEY(4, 2, KEY_CAMERA)
+	MATRIX_KEY(4, 3, KEY_KBDILLUMTOGGLE)
+	>;
+	keypad,num-rows = <6>;
+	keypad,num-columns = <5>;
+};
 
-		led-lpg@13c {
-			compatible = "qcom,pm8058-lpg";
-			reg = <0x13c>;
-		};
+&pm8058_xoadc {
+	/* Reference voltage 2.2 V */
+	xoadc-ref-supply = <&pm8058_l18>;
+
+	/* Board-specific channels */
+	adc-channel@5 {
+		/* Connected to AOUT of ALS sensor */
+		reg = <0x00 0x05>;
+	};
+	adc-channel@6 {
+		/* Connected to test point TP43 */
+		reg = <0x00 0x06>;
+	};
+	adc-channel@7 {
+		/* Connected to battery thermistor */
+		reg = <0x00 0x07>;
+	};
+	adc-channel@8 {
+		/* Connected to battery ID detector */
+		reg = <0x00 0x08>;
+	};
+	adc-channel@9 {
+		/* Connected to XO thermistor */
+		reg = <0x00 0x09>;
 	};
 };
 
