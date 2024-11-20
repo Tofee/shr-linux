@@ -190,10 +190,9 @@
 			reg = <0xC00000 0x1000>;
 			qcom,controller-type = "pmic-arbiter";
 
-			pm8901: pmic {
+			pm8901: pmic8901 {
 				compatible = "qcom,pm8901";
-				interrupt-parent = <&tlmm>;
-				interrupts = <91 8>;
+				interrupts-extended = <&tlmm 91 IRQ_TYPE_LEVEL_LOW>;
 				#interrupt-cells = <2>;
 				interrupt-controller;
 				#address-cells = <1>;
@@ -247,7 +246,7 @@
 					regulator-min-microvolt = <3300000>;
 					regulator-max-microvolt = <3300000>;
 					bias-pull-down;
-					// regulator-always-on; // wifi
+					regulator-always-on; // wifi
 				};
 				pm8901_l2: l2 {
 					regulator-min-microvolt = <2850000>;
@@ -258,7 +257,7 @@
 					regulator-min-microvolt = <3300000>;
 					regulator-max-microvolt = <3300000>;
 					bias-pull-down;
-					// regulator-always-on; // wifi
+					regulator-always-on; // wifi
 				};
 				pm8901_l4: l4 {
 					regulator-min-microvolt = <2600000>;
@@ -444,7 +443,7 @@
 					regulator-min-microvolt = <1800000>;
 					regulator-max-microvolt = <1800000>;
 					bias-pull-down;
-					//regulator-always-on; // wifi
+					regulator-always-on; // wifi
 				};
 				pm8058_l20: l20 {
 					regulator-min-microvolt = <1800000>;
