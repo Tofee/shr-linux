@@ -510,6 +510,7 @@
 					regulator-max-microvolt = <1800000>;
 					qcom,switch-mode-frequency = <1600000>;
 					bias-pull-down;
+					regulator-allow-set-load;
 					regulator-always-on;
 				};
 				pm8058_s4: s4 {
@@ -589,9 +590,6 @@
 			    <&mmcc GFX3D_AHB_CLK>,
 			    <&mmcc GMEM_AXI_CLK>;
 
-			// vdd-supply = <&pm8058_l10>;   // TBC
-			// vddcx-supply = <&pm8058_l10>; // TBC
-
 			qcom,gpu-pwrlevels {
 				compatible = "qcom,gpu-pwrlevels";
 				qcom,gpu-pwrlevel@0 {
@@ -621,7 +619,6 @@
 				      "lcdc_clk";
 
 			lvds-vccs-3p3v-supply = <&pm8058_l10>;
-			// lvds-vdda-supply = <&pm8058_l10>;   // TBC
 
 			status = "okay";
 			memory-region = <&scanout_mem>;
@@ -974,7 +971,7 @@
 	pinctrl-0 = <&sdcc4_pins>;
 
 	vmmc-supply = <&pm8058_s3>; // 1V8
-	//vqmmc-supply = <&pm8901_l1>;
+	vqmmc-supply = <&pm8058_s3>;
 
 	/* not needed? TBC */
 	broken-cd;
