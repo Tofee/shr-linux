@@ -134,6 +134,18 @@ static int mmc_pwrseq_simple_probe(struct platform_device *pdev)
 	device_property_read_u32(dev, "power-off-delay-us",
 				 &pwrseq->power_off_delay_us);
 
+	/*
+	 * TENDERLOIN_GPIO_WL_HOST_WAKE (93):  input
+	 * TENDERLOIN_GPIO_HOST_WAKE_WL (137): output high
+	 * TENDERLOIN_GPIO_WLAN_RST_N   (135): output low
+	 * */
+#if 0
+	// not needed after all ?
+	gpiod_direction_input(pwrseq->reset_gpios->desc[0]);
+	gpiod_direction_output(pwrseq->reset_gpios->desc[1], 1);
+	gpiod_direction_output(pwrseq->reset_gpios->desc[2], 0);
+#endif
+
 	pwrseq->pwrseq.dev = dev;
 	pwrseq->pwrseq.ops = &mmc_pwrseq_simple_ops;
 	pwrseq->pwrseq.owner = THIS_MODULE;
