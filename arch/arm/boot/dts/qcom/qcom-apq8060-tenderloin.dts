@@ -109,19 +109,13 @@
 		};
 	};
 
-	ath6kl_pwrseq: ath6kl_pwrseq {
+	ath6kl_pwrseq: ath6kl-pwrseq {
 			compatible = "mmc-pwrseq-simple";
-			pinctrl-names = "default";
-			pinctrl-0 = <&wlan_gpios_reset>;
-			reset-gpios = <&tlmm 135 GPIO_ACTIVE_LOW>;
-	};
 
-#if 0
-	ath6kl_card: atheros {
-		compatible = "atheros,ath6kl";
-		atheros,board-id = "SD32";
+			reset-gpios = <&tlmm 93 GPIO_ACTIVE_HIGH
+			               &tlmm 137 GPIO_ACTIVE_HIGH
+			               &tlmm 135 GPIO_ACTIVE_LOW>;
 	};
-#endif
 
 	soc {
 		gsbi4: gsbi@16300000 {
@@ -970,11 +964,7 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&sdcc4_pins>;
 
-	vmmc-supply = <&pm8058_s3>; // 1V8
-	vqmmc-supply = <&pm8058_s3>;
-
-	/* not needed? TBC */
-	broken-cd;
+	vmmc-supply = <&pm8901_l1>; // 3V3
 	
 	mmc-pwrseq = <&ath6kl_pwrseq>;
 	// mpm_sdiowakeup_int = MSM_MPM_PIN_SDC4_DAT1 /* 24 */
@@ -986,24 +976,10 @@
 	 *  "8058_l19" - 1.8V - VREG_L19A_1V8     - VDD_1.8
 	 *  "8058_s3"  - 1.8V - VREG_S3A_1V8_WLAN - DVDD_SDIO_1V8 etc.
 	 */
-
-#if 1
-	atheros@1 {
-		compatible = "atheros,ath6kl";
-		atheros,board-id = "SD32";
-		
-		reg = <1>;
-		bus-width = <4>;
-
-		pinctrl-names = "default";
-		pinctrl-0 = <&wlan_gpios>;
-	};
-#else
 	atheros {
 		compatible = "atheros,ath6kl";
 		atheros,board-id = "SD32";
 	};
-#endif
 };
 
 &gsbi3 {
