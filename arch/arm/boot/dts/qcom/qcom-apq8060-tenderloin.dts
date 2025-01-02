@@ -118,10 +118,10 @@
 		 * but maybe we want 0x18300000  INT_ADM0_MASTER = irq 170, like on ipq8064 ?
 		 * Note: there is also an ADM1 at 0x18420000 !
 		 */
-		adm_dma: dma-controller@18300000 {
+		adm_dma0: dma-controller@18320000 {
 			compatible = "qcom,adm";
-			reg = <0x18300000 0x100000>;
-			interrupts = <GIC_SPI 170 IRQ_TYPE_LEVEL_HIGH>;
+			reg = <0x18320000 0x100000>;
+			interrupts = <GIC_SPI 171 IRQ_TYPE_LEVEL_HIGH>;
 			#dma-cells = <1>;
 
 			clocks = <&gcc ADM0_CLK>, <&gcc ADM0_PBUS_CLK>;
@@ -180,7 +180,7 @@
 				clocks = <&gcc GSBI10_UART_CLK>, <&gcc GSBI10_H_CLK>;
 				clock-names = "core", "iface";
 
-				dmas = <&adm_dma 8>;
+				dmas = <&adm_dma0 8>, <&adm_dma0 8>;
 				dma-names = "tx", "rx";
 /*
   // This is some sneak Palm change to make uart2 to talk to gsbi10
