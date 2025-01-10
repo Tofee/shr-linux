@@ -135,6 +135,23 @@
 			reset-names = "clk", "pbus", "c0", "c1", "c2";
 			qcom,ee = <0>;
 		};
+		adm_dma1: dma-controller@18420000 {
+			compatible = "qcom,adm";
+			reg = <0x18420000 0x100000>;
+			interrupts = <GIC_SPI 167 IRQ_TYPE_LEVEL_HIGH>;
+			#dma-cells = <1>;
+
+			clocks = <&gcc ADM1_CLK>, <&gcc ADM1_PBUS_CLK>;
+			clock-names = "core", "iface";
+
+			resets = <&gcc ADM1_RESET>,
+				 <&gcc ADM1_PBUS_RESET>,
+				 <&gcc ADM1_C0_RESET>,
+				 <&gcc ADM1_C1_RESET>,
+				 <&gcc ADM1_C2_RESET>;
+			reset-names = "clk", "pbus", "c0", "c1", "c2";
+			qcom,ee = <0>;
+		};
 		
 		gsbi4: gsbi@16300000 {
 			compatible = "qcom,gsbi-v1.0.0";
