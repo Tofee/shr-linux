@@ -38,6 +38,7 @@
 #define GPIO_CTP_SCL				73
 #define GPIO_CTP_SDA				72
 #define GPIO_CY8CTMA395_XRES		70
+#define GPIO_CTP_WAKE			123
 
 struct addr_data_pair {
 	u32 addr;
@@ -1086,6 +1087,37 @@ static struct device_attribute cy8ctma395_attr_xres = {
 	.store = cy8ctma395_attr_xres_store,
 };
 
+static void cy8ctma395_wake_assert(struct cy8ctma395_platform_data *pdat, int assert)
+{
+	if (assert) {
+		gpio_set_value(pdat->wake, 1);
+		udelay(pdat->wake_us);
+	}
+	else
+		gpio_set_value(pdat->wake, 0);
+
+}
+
+static ssize_t cy8ctma395_attr_wake_store(struct device *dev,
+						struct device_attribute *attr,
+						const char *buf, size_t count)
+{
+	int assert = !!simple_strtoul(buf, NULL, 10);
+	struct cy8ctma395_platform_data *pdat = dev->platform_data;
+
+	cy8ctma395_wake_assert(pdat, assert);
+
+	return (count);
+}
+
+static struct device_attribute cy8ctma395_attr_wake = {
+	.attr = {
+		.name = "wake",
+		.mode = S_IWUGO,
+	},
+	.store = cy8ctma395_attr_wake_store,
+};
+
 static int cy8ctma395_device_probe(struct platform_device *pdev)
 {
 	int rc;
@@ -1098,6 +1130,8 @@ static int cy8ctma395_device_probe(struct platform_device *pdev)
 		pdat->swdck_request = NULL;
 		pdat->swdio_request = NULL;
 		pdat->vdd_enable = NULL;
+		pdat->wake = GPIO_CTP_WAKE;
+		pdat->wake_us = 1000;
 		pdat->xres = GPIO_CY8CTMA395_XRES;
 		pdat->xres_us = 1000;
 		pdat->swdck = GPIO_CTP_SCL;
@@ -1136,6 +1170,10 @@ static int cy8ctma395_device_probe(struct platform_device *pdev)
 	if (rc < 0)
 		goto attr_xres_failed;
 
+	rc = device_create_file(&pdev->dev, &cy8ctma395_attr_wake);
+	if (rc < 0)
+		goto attr_wake_failed;
+
 	if (pdat->vdd_enable) {
 		cy8ctma395_xres_assert(pdat, 1);
 		pdat->vdd_enable(1);
@@ -1152,6 +1190,8 @@ static int cy8ctma395_device_probe(struct platform_device *pdev)
 attr_vdd_failed:
 	pdat->vdd_enable(0);
 
+	device_remove_file(&pdev->dev, &cy8ctma395_attr_wake);
+attr_wake_failed:
 	device_remove_file(&pdev->dev, &cy8ctma395_attr_xres);
 attr_xres_failed:
 	device_remove_file(&pdev->dev, &cy8ctma395_attr_device_config);
@@ -1177,6 +1217,7 @@ static void cy8ctma395_device_remove(struct platform_device *pdev)
 	if (pdat->vdd_enable)
 		device_remove_file(&pdev->dev, &cy8ctma395_attr_vdd);
 
+	device_remove_file(&pdev->dev, &cy8ctma395_attr_wake);
 	device_remove_file(&pdev->dev, &cy8ctma395_attr_xres);
 	device_remove_file(&pdev->dev, &cy8ctma395_attr_device_config);
 	device_remove_file(&pdev->dev, &cy8ctma395_attr_id);
