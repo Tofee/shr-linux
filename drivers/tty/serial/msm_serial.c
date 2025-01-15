@@ -192,10 +192,46 @@ static inline struct msm_port *to_msm_port(struct uart_port *up)
 }
 
 static
-void msm_write(struct uart_port *port, unsigned int val, unsigned int off)
+void msm_write(struct uart_port *port, unsigned int val, unsigned int off, char *debug_str)
 {
+	struct msm_port *msm_port = to_msm_port(port);
+	if (msm_port->uart.line == 2) {
+		pr_info("msm_write %s val=%x (%u) off=%x (%u)\n",debug_str,val,val,off,off);
+
+		if (val == 0 && off == 20 /*msm_write (port,0,MSM_UART_IMR)*/ ) {
+			// dump the port status
+  		pr_info("dump port: name: %s\n",port->name);
+  		pr_info("dump port: flags: 0x%llx (%llu)\n",port->flags,port->flags);
+  		pr_info("dump port: irq: 0x%lx (%lu)\n",port->irq,port->irq);
+  		pr_info("dump port: irqflags: 0x%lx (%lu)\n",port->irqflags,port->irqflags);
+  		pr_info("dump port: uartclk: 0x%x (%u)\n",port->uartclk,port->uartclk);
+  		//pr_info("dump port: rx_fifo_size: 0x%x (%u)\n",port->rx_fifo_size,port->rx_fifo_size);
+  		pr_info("dump port: fifosize: 0x%x (%u)\n",port->fifosize,port->fifosize);
+  		pr_info("dump port: x_char (xon/xoff char): 0x%x (%u)\n",port->x_char,port->x_char);
+  		pr_info("dump port: regshift: 0x%x (%u)\n",port->regshift,port->regshift);
+  		pr_info("dump port: iotype: 0x%x (%u)\n",port->iotype,port->iotype);
+  		pr_info("dump port: iobase: 0x%lx\n",port->iobase);
+  		pr_info("dump port: membase: 0x%x\n",port->membase);
+  		//pr_info("dump port: mem_size: 0x%x (%u)\n",port->mem_size,port->mem_size);
+  		pr_info("dump port: quirks: 0x%x (%u)\n",port->quirks,port->quirks);
+  		pr_info("dump port: status: 0x%x (%u)\n",port->status,port->status);
+  		pr_info("dump port: hw_stopped: %x\n",port->hw_stopped);
+  		pr_info("dump port: mapbase: %x\n",port->mapbase);
+  		pr_info("dump port: mapsize: %x\n",port->mapsize);
+  		if (port->cons) {
+				pr_info("dump port console: flags: 0x%x (%u)\n",port->cons->flags,port->cons->flags);
+				pr_info("dump port console: index: 0x%x (%u)\n",port->cons->index,port->cons->index);
+				pr_info("dump port console: cflag: 0x%x (%u)\n",port->cons->cflag,port->cons->cflag);
+				pr_info("dump port console: ispeed: 0x%x (%u)\n",port->cons->ispeed,port->cons->ispeed);
+				pr_info("dump port console: ospeed: 0x%x (%u)\n",port->cons->ospeed,port->cons->ospeed);
+			}
+		}
+		
+	}
 	writel_relaxed(val, port->membase + off);
 }
+
+#define msm_write(port,val,off) msm_write(port,val,off, "(" #port "," #val "," #off ")")
 
 static
 unsigned int msm_read(struct uart_port *port, unsigned int off)
@@ -1184,6 +1220,11 @@ static int msm_set_baud_rate(struct uart_port *port, unsigned int baud,
 		msm_write(port, MSM_UART_CR_CMD_STALE_EVENT_ENABLE, MSM_UART_CR);
 	}
 
+	if (msm_port->uart.line == 2) {
+		dev_info(port->dev, "Tofe/mainline port=0x%x:\n", port->mapbase);
+		dev_info(port->dev, "Tofe/mainline uartclk=%u:\n", port->uartclk);
+	}
+	
 	return baud;
 }
 
