@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
-
-/dts-v1/;
+/*
+ * Common base for HP TouchPad variants (Topaz 3G and Opal WiFi)
+ */
 
 #include <dt-bindings/input/input.h>
 #include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/leds/common.h>
 #include <dt-bindings/pinctrl/qcom,pmic-gpio.h>
 #include <dt-bindings/pinctrl/qcom,pmic-mpp.h>
 #include <dt-bindings/reset/qcom,gcc-msm8660.h>
@@ -12,7 +14,7 @@
 #include "pm8058.dtsi"
 
 // there can be only one
-#define USE_I2C_TOUCHSCREEN_DRIVER 0
+#define USE_I2C_TOUCHSCREEN_DRIVER 1
 #define USE_ADM_DMA 1
 #if USE_ADM_DMA
 #define ADM_USE_MASTER 0
@@ -78,7 +80,7 @@
 			regulator-always-on;
 			regulator-boot-on;
 		};
-		
+
 		/* 5v bias */
 		vdd50_boost: vdd50 {
 			compatible = "regulator-fixed";
@@ -89,7 +91,7 @@
 
 			gpio = <&tlmm 102 GPIO_ACTIVE_HIGH>;
 			enable-active-high;
-			
+
 			regulator-always-on;
 			regulator-boot-on;
 		};
@@ -172,7 +174,7 @@
 #endif
 		};
 #endif
-		
+
 		gsbi4: gsbi@16300000 {
 			compatible = "qcom,gsbi-v1.0.0";
 			cell-index = <4>;
@@ -227,7 +229,7 @@
 	#define DMOV_HSUART2_TX_CRCI   ((1 << 4) + ADM3_0_B_GSBI10_OUT_CRCI) // 16 +  9 = 25
 	#define DMOV_HSUART2_RX_CHAN   8
 	#define DMOV_HSUART2_RX_CRCI   ((1 << 4) + ADM3_0_B_GSBI10_IN_CRCI)  // 16 + 10 = 26
- */				
+ */
 				// qcom,tx-crci = <25>;
 				qcom,rx-crci = <10>;
 #endif
@@ -687,9 +689,9 @@
 
 			status = "okay";
 			memory-region = <&scanout_mem>;
-			
+
 			// align on LSB instead of MSB
-			qcom,lcdc-align-lsb; 
+			qcom,lcdc-align-lsb;
 
 			ports {
 				#address-cells = <1>;
@@ -729,6 +731,16 @@
 		};
 	};
 
+	backlight: backlight {
+		compatible = "pwm-backlight";
+		pwms = <&pm8058_pwm 0 100000>;
+		brightness-levels = <0 4 8 16 32 64 128 255>;
+		default-brightness-level = <6>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&backlight_pwm_gpios &backlight_enable_gpios>;
+		power-supply = <&pm8058_l10>;
+	};
+
 	lg_panel: panel {
 		compatible = "lg,xga";
 
@@ -738,9 +750,25 @@
 		// ?? Due to hardware change, it will not use GPIO102 as 5V boost Enable since EVT1
 
 		power-supply = <&pm8058_l10>;
+		backlight = <&backlight>;
 
 		pinctrl-names = "default";
 		pinctrl-0 = <&panel_pins>;
+
+		width-mm = <272>;
+		height-mm = <181>;
+
+		panel-timing {
+			clock-frequency = <96000000>;
+			hactive = <1024>;
+			vactive = <768>;
+			hfront-porch = <272>;
+			hsync-len = <328>;
+			hback-porch = <400>;
+			vfront-porch = <10>;
+			vsync-len = <7>;
+			vback-porch = <6>;
+		};
 
 		port {
 			panel_in: endpoint {
@@ -775,6 +803,12 @@
 		 * enable high current charging.
 		 */
 		uok-gpios = <&tlmm 140 GPIO_ACTIVE_LOW>;
+	};
+
+	vibrator {
+		compatible = "gpio-vibrator";
+		enable-gpios = <&tlmm 79 GPIO_ACTIVE_HIGH>;
+		vcc-supply = <&pm8058_l5>;
 	};
 
 #if !USE_I2C_TOUCHSCREEN_DRIVER
@@ -969,7 +1003,7 @@
 			output-low;
 		};
 	};
-	
+
 	wlan_gpios_reset: wlan-reset-state {
 		irq-pins {
 			pins = "gpio135";
@@ -977,7 +1011,7 @@
 			bias-disable;
 		};
 	};
-	
+
 	wlan_gpios: wlan-state {
 		irq-pins {
 			pins = "gpio93", "gpio137";
@@ -1046,9 +1080,9 @@
 	#address-cells = <1>;
 	#size-cells = <0>;
 	disable-wp;
-	
+
 	vmmc-supply = <&pm8901_l1>; // 3V3
-	
+
 	mmc-pwrseq = <&ath6kl_pwrseq>;
 	// mpm_sdiowakeup_int = MSM_MPM_PIN_SDC4_DAT1 /* 24 */
 
@@ -1109,7 +1143,12 @@
 		vddio-supply = <&pm8058_s3>;  // 1.8V
 	};
 
-	// 44: isl29023 // ALS
+	isl29023@44 {
+		/* Ambient Light Sensor */
+		compatible = "isil,isl29023";
+		reg = <0x44>;
+		vcc-supply = <&pm8058_l15>;   // 2.85V
+	};
 
 	// capacitive proximity??
 };
@@ -1125,7 +1164,7 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&gsbi4_i2c_pins>;
 
-	// 78: mt9m113 defconfig: CONFIG_VIDEO_ATOMISP_MT9M114
+	/* Camera node is variant-specific - defined in topaz/opal dts */
 };
 
 &gsbi6 {
@@ -1203,7 +1242,23 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&gsbi7_i2c_pins>;
 
-	// 1a: wm8994
+	wm8958: audio-codec@1a {
+		compatible = "wlf,wm8958";
+		reg = <0x1a>;
+
+		#sound-dai-cells = <0>;
+
+		/* Power supplies */
+		AVDD2-supply = <&pm8058_l4>;      // 2.85V
+		CPVDD-supply = <&pm8058_l4>;      // 2.85V
+		DBVDD1-supply = <&pm8058_s3>;     // 1.8V
+		DBVDD2-supply = <&pm8058_s3>;     // 1.8V
+		DBVDD3-supply = <&pm8058_s3>;     // 1.8V
+		DCVDD-supply = <&pm8058_s3>;      // 1.8V
+		AVDD1-supply = <&pm8058_l4>;      // 2.85V
+		SPKVDD1-supply = <&pm8058_l4>;    // 2.85V
+		SPKVDD2-supply = <&pm8058_l4>;    // 2.85V
+	};
 };
 
 &gsbi8 {
@@ -1217,7 +1272,34 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&gsbi8_i2c_pins>;
 
-	//31-33: a6_0, a6_1, LM8502
+	lm8502: led-controller@33 {
+		compatible = "ti,lm8502";
+		reg = <0x33>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		enable-gpio = <&tlmm 26 GPIO_ACTIVE_HIGH>;
+
+		led@0 {
+			reg = <0>;
+			color = <LED_COLOR_ID_RED>;
+			function = LED_FUNCTION_STATUS;
+		};
+
+		led@1 {
+			reg = <1>;
+			color = <LED_COLOR_ID_GREEN>;
+			function = LED_FUNCTION_STATUS;
+		};
+
+		led@2 {
+			reg = <2>;
+			color = <LED_COLOR_ID_BLUE>;
+			function = LED_FUNCTION_STATUS;
+		};
+	};
+
+	// a6_0 at 0x31, a6_1 at 0x32 - battery controllers
 };
 
 &gsbi10 {
@@ -1249,7 +1331,7 @@
                 // try reusing the generic cyttsp_i2c driver
 		compatible = "cypress,cy8ctma340"; // ideally should be cypress,cy8ctma395
 		reg = <0x67>;
-		
+
 		vcpin-supply = <&vdd50_boost>;   // VCPIN is the analog voltage supply
 		vdd-supply = <&pm8058_l10>;    // VDD is the digital voltage supply
 
@@ -1271,10 +1353,11 @@
 
 &pm8058 {
 	interrupts-extended = <&tlmm 88 IRQ_TYPE_LEVEL_LOW>;
-	
+
 	pm8058_pwm: led-backlight@13c {
 		compatible = "qcom,pm8058-lpg";
 		reg = <0x13c>;
+		#pwm-cells = <2>;
 		label = "backlight";
 	};
 };
